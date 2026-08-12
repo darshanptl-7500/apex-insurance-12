@@ -1,0 +1,46 @@
+<div class="apex-login">
+  <div class="apex-login__panel">
+    <div class="apex-login__brand">
+      <span class="apex-login__mark">&#9670;</span>
+      <div>
+        <div class="apex-login__name">Apex Insurance</div>
+        <div class="apex-login__tagline">Underwriting Portal</div>
+      </div>
+    </div>
+
+    <h1>Sign in</h1>
+    <p class="apex-login__subtitle">Sign in to continue to the underwriting portal.</p>
+
+    <div class="apex-alert apex-alert--danger" *ngIf="error">{{ error }}</div>
+
+    <form (ngSubmit)="submit()" #loginForm="ngForm">
+      <div class="apex-form-row">
+        <label for="username">Username</label>
+        <input type="text" id="username" name="username" [(ngModel)]="username" autocomplete="username" [disabled]="busy" required>
+      </div>
+      <div class="apex-form-row">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" [(ngModel)]="password" autocomplete="current-password" [disabled]="busy" required>
+      </div>
+
+      <div class="apex-btn-row">
+        <button type="submit" class="apex-btn apex-btn--primary apex-w-full" [disabled]="busy">
+          {{ busy ? 'Signing in…' : 'Sign in' }}
+        </button>
+      </div>
+    </form>
+
+    <div class="apex-login__demo" *ngIf="demoAccounts.length">
+      <div class="apex-login__demo-title">Demo roles</div>
+      <div class="apex-login__demo-hint">Password for all: <code>{{ demoPassword }}</code></div>
+      <ul class="apex-login__demo-list">
+        <li *ngFor="let a of demoAccounts">
+          <button type="button" class="apex-login__demo-btn" (click)="useDemo(a)" [disabled]="busy">
+            <span class="apex-login__demo-role">{{ a.role }}</span>
+            <span class="apex-login__demo-meta">{{ a.name }} · <code>{{ a.username }}</code></span>
+          </button>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>

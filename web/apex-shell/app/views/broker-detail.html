@@ -1,0 +1,108 @@
+<div class="apex-breadcrumb"><a href="#!/brokers">Brokers</a> / {{vm.broker.name || vm.id}}</div>
+
+<div class="apex-loading" ng-if="vm.loading">
+    <span class="apex-spinner"></span> Loading broker…
+</div>
+
+<div class="apex-alert apex-alert--danger" ng-if="vm.error && !vm.loading">{{vm.error}}</div>
+
+<div ng-if="!vm.loading && vm.broker">
+
+    <div class="apex-page-header">
+        <div class="apex-page-header__title">
+            <h1>{{vm.broker.name}}</h1>
+            <div class="apex-page-header__subtitle">
+                Code: <span class="apex-mono">{{vm.broker.brokerCode}}</span>
+                &middot; Agreement {{vm.broker.agreementRef || '—'}}
+            </div>
+        </div>
+        <div class="apex-page-header__actions">
+            <span class="apex-badge apex-badge--success" ng-if="vm.broker.isActive">Active</span>
+            <span class="apex-badge apex-badge--neutral" ng-if="!vm.broker.isActive">Inactive</span>
+            <button type="button" class="apex-btn apex-btn--sm" ng-if="vm.canEdit() && !vm.editing"
+                    ng-click="vm.startEdit()">Edit</button>
+            <button type="button" class="apex-btn apex-btn--sm apex-btn--danger"
+                    ng-if="vm.canEdit() && vm.broker.isActive"
+                    ng-disabled="vm.busy" ng-click="vm.deactivate()">Deactivate</button>
+        </div>
+    </div>
+
+    <div class="apex-alert apex-alert--success" ng-if="vm.actionSuccess">{{vm.actionSuccess}}</div>
+    <div class="apex-alert apex-alert--danger" ng-if="vm.actionError">{{vm.actionError}}</div>
+
+    <div class="apex-grid-2">
+        <div>
+            <div class="apex-card" ng-if="!vm.editing">
+                <div class="apex-card__header"><h3>Broker details</h3></div>
+                <dl class="apex-kv">
+                    <dt>Code</dt><dd class="apex-mono">{{vm.broker.brokerCode}}</dd>
+                    <dt>Email</dt><dd>{{vm.broker.contactEmail || '—'}}</dd>
+                    <dt>Phone</dt><dd>{{vm.broker.contactPhone || '—'}}</dd>
+                    <dt>Address</dt><dd>{{vm.broker.address || '—'}}</dd>
+                    <dt>Agreement</dt><dd>{{vm.broker.agreementRef || '—'}}</dd>
+                    <dt>Production target</dt><dd>{{vm.broker.productionTarget | currency:'£':0}}</dd>
+                </dl>
+            </div>
+
+            <div class="apex-card" ng-if="vm.editing">
+                <div class="apex-card__header"><h3>Edit broker</h3></div>
+                <form ng-submit="vm.save()">
+                    <div class="apex-form-grid">
+                        <div class="apex-form-row">
+                            <label>Name</label>
+                            <input type="text" ng-model="vm.draft.name" required>
+                        </div>
+                        <div class="apex-form-row">
+                            <label>Code</label>
+                            <input type="text" ng-model="vm.draft.brokerCode" disabled>
+                        </div>
+                        <div class="apex-form-row">
+                            <label>Email</label>
+                            <input type="email" ng-model="vm.draft.contactEmail">
+                        </div>
+                        <div class="apex-form-row">
+                            <label>Phone</label>
+                            <input type="text" ng-model="vm.draft.contactPhone">
+                        </div>
+                        <div class="apex-form-row">
+                            <label>Agreement ref</label>
+                            <input type="text" ng-model="vm.draft.agreementRef">
+                        </div>
+                        <div class="apex-form-row">
+                            <label>Production target (£)</label>
+                            <input type="number" ng-model="vm.draft.productionTarget" min="0">
+                        </div>
+                    </div>
+                    <div class="apex-form-row">
+                        <label>Address</label>
+                        <input type="text" ng-model="vm.draft.address">
+                    </div>
+                    <div class="apex-form-row">
+                        <label class="apex-checkbox-row">
+                            <input type="checkbox" ng-model="vm.draft.isActive"> Active
+                        </label>
+                    </div>
+                    <div class="apex-btn-row">
+                        <button type="submit" class="apex-btn apex-btn--primary" ng-disabled="vm.busy">
+                            {{vm.busy ? 'Saving…' : 'Save'}}
+                        </button>
+                        <button type="button" class="apex-btn apex-btn--ghost" ng-click="vm.cancelEdit()">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div>
+            <div class="apex-card" ng-if="vm.performance">
+                <div class="apex-card__header"><h3>Performance</h3></div>
+                <dl class="apex-kv">
+                    <dt>Submissions</dt><dd>{{vm.performance.submissionCount}}</dd>
+                    <dt>Bound</dt><dd>{{vm.performance.boundCount}}</dd>
+                    <dt>GWP</dt><dd>{{vm.performance.grossWrittenPremium | currency:'£':0}}</dd>
+                    <dt>Hit ratio</dt><dd>{{vm.performance.hitRatio}}%</dd>
+                    <dt>Loss ratio</dt><dd>{{vm.performance.lossRatio}}%</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>

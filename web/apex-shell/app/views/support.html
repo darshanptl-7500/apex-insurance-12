@@ -1,0 +1,76 @@
+<div class="apex-page-header">
+    <div class="apex-page-header__title">
+        <h1>Support</h1>
+        <div class="apex-page-header__subtitle">System Health, Integration Activity, and RAG scheduled jobs.</div>
+    </div>
+    <div class="apex-page-header__actions">
+        <button type="button" class="apex-btn apex-btn--sm" ng-click="vm.reload()" ng-disabled="vm.loading">Refresh</button>
+    </div>
+</div>
+
+<div class="apex-search-tabs">
+    <button type="button" class="apex-search-tabs__item" ng-class="{active: vm.tab==='health'}" ng-click="vm.tab='health'">System Health Check</button>
+    <button type="button" class="apex-search-tabs__item" ng-class="{active: vm.tab==='activity'}" ng-click="vm.tab='activity'; vm.loadActivity()">Integration Activity</button>
+    <button type="button" class="apex-search-tabs__item" ng-class="{active: vm.tab==='jobs'}" ng-click="vm.tab='jobs'; vm.loadJobs()">RAG / Scheduled Jobs</button>
+</div>
+
+<div ng-if="vm.tab==='health'">
+    <div class="apex-loading" ng-if="vm.loading"><span class="apex-spinner"></span> Checking dependencies…</div>
+    <div class="apex-alert apex-alert--danger" ng-if="vm.error && !vm.loading">{{vm.error}}</div>
+    <div class="apex-health-grid" ng-if="!vm.loading && vm.items.length">
+        <div class="apex-health-card" ng-repeat="h in vm.items"
+             ng-class="{'apex-health-card--ok': h.status === 'Success', 'apex-health-card--warn': h.status === 'Warning', 'apex-health-card--fail': h.status === 'Failed'}">
+            <div class="apex-health-card__name">{{h.name}}</div>
+            <div class="apex-health-card__status">{{h.status}}</div>
+            <div class="apex-health-card__msg">{{h.message}}</div>
+            <div class="apex-text-muted">Elapsed {{h.elapsedSeconds | number:3}}s</div>
+            <div class="apex-mono apex-text-muted">{{h.endpoint}}</div>
+        </div>
+    </div>
+</div>
+
+<div ng-if="vm.tab==='activity'">
+    <div class="apex-panel-red"><span>Integration Activity</span></div>
+    <div class="apex-card">
+        <table class="apex-table apex-table--dense" ng-if="vm.activity.length">
+            <thead>
+            <tr><th>When</th><th>System</th><th>Dir</th><th>Action</th><th>Reference</th><th>Status</th><th>Message</th><th>ms</th></tr>
+            </thead>
+            <tbody>
+            <tr ng-repeat="a in vm.activity">
+                <td>{{a.occurredUtc | date:'dd/MM/yyyy HH:mm'}}</td>
+                <td>{{a.systemName}}</td>
+                <td>{{a.direction}}</td>
+                <td>{{a.actionName}}</td>
+                <td class="apex-mono">{{a.reference}}</td>
+                <td>{{a.status}}</td>
+                <td>{{a.message}}</td>
+                <td>{{a.elapsedMs}}</td>
+            </tr>
+            </tbody>
+        </table>
+        <apex-empty-state ng-if="!vm.activity.length" title="'No integration events'" message="'Events appear when risks are created or UW edits post to Open Box.'"></apex-empty-state>
+    </div>
+</div>
+
+<div ng-if="vm.tab==='jobs'">
+    <div class="apex-panel-red"><span>RAG / Scheduled Jobs</span></div>
+    <div class="apex-card">
+        <table class="apex-table apex-table--dense" ng-if="vm.jobs.length">
+            <thead>
+            <tr><th>Job Name</th><th>Schedule Type</th><th>RAG Status</th><th>Last Run</th><th>Job Status</th></tr>
+            </thead>
+            <tbody>
+            <tr ng-repeat="j in vm.jobs">
+                <td>{{j.jobName}}</td>
+                <td>{{j.scheduleType}}</td>
+                <td>
+                    <span class="apex-chip" ng-class="{'apex-chip--ok': j.ragStatus==='Pass', 'apex-chip--due': j.ragStatus==='Must Run'}">{{j.ragStatus}}</span>
+                </td>
+                <td>{{j.lastRunUtc | date:'dd/MM/yyyy HH:mm'}}</td>
+                <td>{{j.jobStatus}}</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

@@ -1,0 +1,14 @@
+{
+  "name": "apex-insurance-e2e",
+  "private": true,
+  "description": "Playwright E2E for Apex UW workbench (hybrid UI + API)",
+  "scripts": {
+    "test": "playwright test",
+    "test:smoke": "playwright test --grep @smoke",
+    "test:ui": "playwright test --ui",
+    "report": "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.1"
+  }
+}

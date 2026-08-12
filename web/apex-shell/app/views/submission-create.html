@@ -1,0 +1,105 @@
+<div class="apex-breadcrumb"><a href="#!/pipeline/upcoming">Pipeline</a> / New Risk</div>
+
+<div class="apex-page-header">
+    <div class="apex-page-header__title">
+        <h1>+ New Risk</h1>
+        <div class="apex-page-header__subtitle">Create a wireframe risk — submitted to Open Box, then surfaces in Upcoming.</div>
+    </div>
+</div>
+
+<div class="apex-card">
+    <div class="apex-panel-red"><span>New Risk / Submission intake</span></div>
+    <div class="apex-alert apex-alert--danger" ng-if="vm.error">{{vm.error}}</div>
+    <div class="apex-loading" ng-if="vm.lookupsLoading">
+        <span class="apex-spinner"></span> Loading brokers and insureds…
+    </div>
+
+    <form ng-if="!vm.lookupsLoading" ng-submit="vm.submit()" novalidate class="apex-pad">
+        <div class="apex-form-grid">
+            <div class="apex-form-row">
+                <label>Insured / Account Name *</label>
+                <select ng-model="vm.draft.insuredId" required
+                        ng-options="i.id as i.name for i in vm.insureds">
+                    <option value="">Select insured…</option>
+                </select>
+            </div>
+            <div class="apex-form-row">
+                <label>Broker *</label>
+                <select ng-model="vm.draft.brokerId" required
+                        ng-options="b.id as (b.brokerCode + ' — ' + b.name) for b in vm.brokers">
+                    <option value="">Select broker…</option>
+                </select>
+            </div>
+            <div class="apex-form-row">
+                <label>Broker Contact</label>
+                <input type="text" ng-model="vm.draft.brokerContact" placeholder="Name / email">
+            </div>
+            <div class="apex-form-row">
+                <label>Business Area *</label>
+                <select ng-model="vm.draft.businessArea"
+                        ng-options="o.value as o.label for o in vm.areaOptions"></select>
+            </div>
+            <div class="apex-form-row">
+                <label>Line of business *</label>
+                <select ng-model="vm.draft.lineOfBusiness"
+                        ng-options="o.value as o.label for o in vm.lobOptions"></select>
+            </div>
+            <div class="apex-form-row">
+                <label>Inception Date *</label>
+                <input type="date" ng-model="vm.draft.requestedEffectiveDate" required ng-change="vm.onInception()">
+            </div>
+            <div class="apex-form-row">
+                <label>Expiry Date *</label>
+                <input type="date" ng-model="vm.draft.expiryDate" required>
+            </div>
+            <div class="apex-form-row">
+                <label>YOA</label>
+                <input type="text" ng-model="vm.draft.yoa" readonly>
+            </div>
+            <div class="apex-form-row">
+                <label>Policy Type *</label>
+                <select ng-model="vm.draft.policyType"
+                        ng-options="o.value as o.label for o in vm.policyTypeOptions"></select>
+            </div>
+            <div class="apex-form-row">
+                <label>MOP</label>
+                <select ng-model="vm.draft.mop"
+                        ng-options="o.value as o.label for o in vm.mopOptions"></select>
+            </div>
+            <div class="apex-form-row">
+                <label>N/R</label>
+                <select ng-model="vm.draft.newOrRenewal">
+                    <option value="N">New</option>
+                    <option value="R">Renewal</option>
+                </select>
+            </div>
+            <div class="apex-form-row">
+                <label>Risk Appetite</label>
+                <input type="text" ng-model="vm.draft.riskAppetite" placeholder="e.g. Standard">
+            </div>
+            <div class="apex-form-row">
+                <label>Target premium (£)</label>
+                <input type="number" min="0" step="1" ng-model="vm.draft.targetPremium">
+            </div>
+            <div class="apex-form-row">
+                <label>
+                    <input type="checkbox" ng-model="vm.draft.isDelegatedAuthority"> Delegated Authority (DA)
+                </label>
+            </div>
+        </div>
+        <div class="apex-form-row">
+            <label>Policy Description</label>
+            <textarea rows="3" ng-model="vm.draft.policyDescription" placeholder="Risk description…"></textarea>
+        </div>
+        <div class="apex-form-row">
+            <label>Notes</label>
+            <textarea rows="2" ng-model="vm.draft.notes" placeholder="UWTR notes…"></textarea>
+        </div>
+        <div class="apex-btn-row">
+            <button type="submit" class="apex-btn apex-btn--danger" ng-disabled="vm.busy">
+                {{vm.busy ? 'Submitting to Open Box…' : 'Submit'}}
+            </button>
+            <button type="button" class="apex-btn apex-btn--ghost" ng-click="vm.cancel()" ng-disabled="vm.busy">Cancel</button>
+        </div>
+    </form>
+</div>

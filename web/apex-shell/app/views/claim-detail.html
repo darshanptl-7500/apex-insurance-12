@@ -1,0 +1,109 @@
+<div class="apex-breadcrumb"><a href="#!/claims">Claims</a> / {{vm.claim.claimNumber || vm.id}}</div>
+
+<div class="apex-loading" ng-if="vm.loading">
+    <span class="apex-spinner"></span> Loading claim…
+</div>
+
+<div class="apex-alert apex-alert--danger" ng-if="vm.error && !vm.loading">{{vm.error}}</div>
+
+<div ng-if="!vm.loading && vm.claim">
+
+    <div class="apex-page-header">
+        <div class="apex-page-header__title">
+            <h1>{{vm.claim.claimNumber}}</h1>
+            <div class="apex-page-header__subtitle">
+                Policy: <a ng-href="#!/policies/{{vm.claim.policyId}}">{{vm.claim.policyNumber}}</a>
+                &middot; {{vm.claim.insuredName || '—'}}
+            </div>
+        </div>
+        <div class="apex-page-header__actions">
+            <apex-status-badge kind="'claim'" value="vm.claim.status"></apex-status-badge>
+            <button type="button" class="apex-btn apex-btn--sm apex-btn--danger"
+                    ng-if="vm.claim.status !== 'Closed' && vm.claim.status !== 3"
+                    ng-disabled="vm.busy" ng-click="vm.closeClaim()">Close claim</button>
+        </div>
+    </div>
+
+    <div class="apex-alert apex-alert--success" ng-if="vm.actionSuccess">{{vm.actionSuccess}}</div>
+    <div class="apex-alert apex-alert--danger" ng-if="vm.actionError">{{vm.actionError}}</div>
+
+    <div class="apex-grid-2">
+        <div>
+            <div class="apex-card">
+                <div class="apex-card__header"><h3>Loss description</h3></div>
+                <p>{{vm.claim.description}}</p>
+            </div>
+
+            <div class="apex-card">
+                <div class="apex-card__header"><h3>Status</h3></div>
+                <div class="apex-form-grid">
+                    <div class="apex-form-row">
+                        <label>Status</label>
+                        <select ng-model="vm.draftStatus" ng-options="o.value as o.label for o in vm.statusOptions"></select>
+                    </div>
+                </div>
+                <div class="apex-btn-row">
+                    <button type="button" class="apex-btn" ng-disabled="vm.busy" ng-click="vm.updateStatus()">Update status</button>
+                </div>
+            </div>
+
+            <div class="apex-card">
+                <div class="apex-card__header"><h3>Reserve</h3></div>
+                <div class="apex-form-row">
+                    <label>Reserve (£)</label>
+                    <input type="number" ng-model="vm.draftReserve" min="0">
+                </div>
+                <div class="apex-btn-row">
+                    <button type="button" class="apex-btn" ng-disabled="vm.busy" ng-click="vm.updateReserve()">Save reserve</button>
+                </div>
+            </div>
+
+            <div class="apex-card">
+                <div class="apex-card__header"><h3>Payment</h3></div>
+                <div class="apex-form-row">
+                    <label>Payment amount (£)</label>
+                    <input type="number" ng-model="vm.paymentAmount" min="0.01" step="0.01">
+                </div>
+                <div class="apex-btn-row">
+                    <button type="button" class="apex-btn apex-btn--primary" ng-disabled="vm.busy" ng-click="vm.postPayment()">Post payment</button>
+                </div>
+            </div>
+
+            <div class="apex-card">
+                <div class="apex-card__header"><h3>Handler</h3></div>
+                <div class="apex-form-row">
+                    <label>Assign handler</label>
+                    <select ng-model="vm.draftHandlerId"
+                            ng-options="h.id as (h.fullName || h.displayName || h.username) for h in vm.handlers">
+                        <option value="">Select…</option>
+                    </select>
+                </div>
+                <div class="apex-btn-row">
+                    <button type="button" class="apex-btn" ng-disabled="vm.busy" ng-click="vm.assignHandler()">Assign</button>
+                </div>
+            </div>
+
+            <div class="apex-card">
+                <div class="apex-card__header">
+                    <h3>Documents</h3>
+                    <a class="apex-btn apex-btn--sm" ng-href="#!/documents?claimId={{vm.id}}">Manage in Documents</a>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <div class="apex-card">
+                <div class="apex-card__header"><h3>Claim summary</h3></div>
+                <dl class="apex-kv">
+                    <dt>Loss date</dt><dd>{{vm.claim.dateOfLoss | date:'dd MMM yyyy'}}</dd>
+                    <dt>Reported</dt><dd>{{vm.claim.dateReported | date:'dd MMM yyyy'}}</dd>
+                    <dt>Reserve</dt><dd>{{vm.claim.reserveAmount | currency:'£':0}}</dd>
+                    <dt>Paid</dt><dd>{{vm.claim.paidAmount | currency:'£':0}}</dd>
+                    <dt>Incurred</dt><dd>{{vm.claim.incurred | currency:'£':0}}</dd>
+                    <dt>Handler</dt><dd>{{vm.claim.handlerName || 'Unassigned'}}</dd>
+                    <dt>Closed</dt><dd>{{vm.claim.closedDate ? (vm.claim.closedDate | date:'dd MMM yyyy') : '—'}}</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>

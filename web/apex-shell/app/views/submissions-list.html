@@ -1,0 +1,71 @@
+<div class="apex-page-header">
+    <div class="apex-page-header__title">
+        <h1>Submissions</h1>
+        <div class="apex-page-header__subtitle">New business and renewal submissions awaiting underwriting action.</div>
+    </div>
+    <div class="apex-page-header__actions">
+        <a class="apex-btn apex-btn--primary" href="#!/submissions/new">+ New submission</a>
+    </div>
+</div>
+
+<div class="apex-card">
+    <form class="apex-filter-bar" ng-submit="vm.applyFilters()">
+        <div class="apex-form-row">
+            <label>Search</label>
+            <input type="search" ng-model="vm.filters.search" placeholder="Reference, insured, broker…">
+        </div>
+        <div class="apex-form-row">
+            <label>Status</label>
+            <select ng-model="vm.filters.status" ng-options="o.value as o.label for o in vm.statusOptions"></select>
+        </div>
+        <div class="apex-form-row">
+            <label>Line of business</label>
+            <select ng-model="vm.filters.lineOfBusiness" ng-options="o.value as o.label for o in vm.lobOptions"></select>
+        </div>
+        <div class="apex-form-row">
+            <button type="submit" class="apex-btn">Apply</button>
+        </div>
+        <div class="apex-form-row">
+            <button type="button" class="apex-btn apex-btn--ghost" ng-click="vm.resetFilters()">Reset</button>
+        </div>
+    </form>
+
+    <div class="apex-loading" ng-if="vm.loading">
+        <span class="apex-spinner"></span> Loading submissions…
+    </div>
+
+    <div class="apex-alert apex-alert--danger" ng-if="vm.error && !vm.loading">{{vm.error}}</div>
+
+    <apex-empty-state ng-if="!vm.loading && !vm.error && vm.submissions.length === 0"
+                       title="'No submissions found'"
+                       message="'Try widening your search or clearing filters.'"></apex-empty-state>
+
+    <div class="apex-table-wrap" ng-if="!vm.loading && vm.submissions.length > 0">
+        <table class="apex-table">
+            <thead>
+            <tr>
+                <th>Reference</th>
+                <th>Insured</th>
+                <th>Broker</th>
+                <th>LOB</th>
+                <th>Status</th>
+                <th>Target Premium</th>
+                <th>Inception</th>
+                <th>Underwriter</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr class="clickable" ng-repeat="s in vm.submissions">
+                <td><a class="apex-table__link" ng-href="#!/submissions/{{s.id}}">{{s.submissionNumber}}</a></td>
+                <td>{{s.insuredName || '—'}}</td>
+                <td>{{s.brokerName || '—'}}</td>
+                <td>{{s.lineOfBusiness || '—'}}</td>
+                <td><apex-status-badge kind="'submission'" value="s.status"></apex-status-badge></td>
+                <td>{{s.targetPremium | currency:'£':0}}</td>
+                <td>{{s.requestedEffectiveDate | date:'dd MMM yyyy'}}</td>
+                <td>{{s.underwriterName || '—'}}</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

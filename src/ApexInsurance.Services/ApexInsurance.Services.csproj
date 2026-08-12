@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>ApexInsurance.Services</RootNamespace>
+    <AssemblyName>ApexInsurance.Services</AssemblyName>
+    <LangVersion>latest</LangVersion>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ApexInsurance.Domain\ApexInsurance.Domain.csproj" />
+    <ProjectReference Include="..\ApexInsurance.Data\ApexInsurance.Data.csproj" />
+    <ProjectReference Include="..\ApexInsurance.Services.Contracts\ApexInsurance.Services.Contracts.csproj" />
+    <ProjectReference Include="..\ApexInsurance.Dto\ApexInsurance.Dto.csproj" />
+    <ProjectReference Include="..\ApexInsurance.Data.OpenBox\ApexInsurance.Data.OpenBox.csproj" />
+    <ProjectReference Include="..\ApexInsurance.Security\ApexInsurance.Security.csproj" />
+    <ProjectReference Include="..\ApexInsurance.Shared\ApexInsurance.Shared.csproj" />
+  </ItemGroup>
+
+</Project>

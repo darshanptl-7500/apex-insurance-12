@@ -1,0 +1,103 @@
+<div class="apex-page-header">
+    <div class="apex-page-header__title">
+        <h1>Claims</h1>
+        <div class="apex-page-header__subtitle">First notification of loss (FNOL) and claim status tracking.</div>
+    </div>
+    <div class="apex-page-header__actions">
+        <button type="button" class="apex-btn" ng-click="vm.toggleFnolForm()">
+            {{vm.showFnolForm ? 'Cancel' : '+ New FNOL'}}
+        </button>
+    </div>
+</div>
+
+<div class="apex-card" ng-if="vm.showFnolForm">
+    <div class="apex-card__header"><h3>First Notification of Loss</h3></div>
+    <div class="apex-alert apex-alert--danger" ng-if="vm.fnolError">{{vm.fnolError}}</div>
+    <form ng-submit="vm.submitFnol()">
+        <div class="apex-form-grid">
+            <div class="apex-form-row">
+                <label>Policy</label>
+                <select ng-model="vm.fnol.policyId" required
+                        ng-options="p.id as (p.policyNumber + ' — ' + (p.insuredName || 'Insured')) for p in vm.policies">
+                    <option value="">Select policy…</option>
+                </select>
+            </div>
+            <div class="apex-form-row">
+                <label>Loss date</label>
+                <input type="date" ng-model="vm.fnol.dateOfLoss" required>
+            </div>
+            <div class="apex-form-row">
+                <label>Initial reserve (£)</label>
+                <input type="number" ng-model="vm.fnol.initialReserve" min="0">
+            </div>
+        </div>
+        <div class="apex-form-row">
+            <label>Description of loss</label>
+            <textarea ng-model="vm.fnol.description" required
+                      placeholder="What happened, where, and any immediate actions taken."></textarea>
+        </div>
+        <div class="apex-btn-row">
+            <button type="submit" class="apex-btn apex-btn--primary" ng-disabled="vm.fnolBusy">
+                {{vm.fnolBusy ? 'Submitting…' : 'Submit FNOL'}}
+            </button>
+        </div>
+    </form>
+</div>
+
+<div class="apex-card">
+    <form class="apex-filter-bar" ng-submit="vm.applyFilters()">
+        <div class="apex-form-row">
+            <label>Policy id</label>
+            <input type="number" ng-model="vm.filters.policyId" placeholder="Optional">
+        </div>
+        <div class="apex-form-row">
+            <label>Status</label>
+            <select ng-model="vm.filters.status" ng-options="o.value as o.label for o in vm.statusOptions"></select>
+        </div>
+        <div class="apex-form-row">
+            <button type="submit" class="apex-btn">Apply</button>
+        </div>
+        <div class="apex-form-row">
+            <button type="button" class="apex-btn apex-btn--ghost" ng-click="vm.resetFilters()">Reset</button>
+        </div>
+    </form>
+
+    <div class="apex-loading" ng-if="vm.loading">
+        <span class="apex-spinner"></span> Loading claims…
+    </div>
+
+    <div class="apex-alert apex-alert--danger" ng-if="vm.error && !vm.loading">{{vm.error}}</div>
+
+    <apex-empty-state ng-if="!vm.loading && !vm.error && vm.claims.length === 0"
+                       title="'No claims found'"
+                       message="'Submit a First Notification of Loss to open a new claim.'"></apex-empty-state>
+
+    <div class="apex-table-wrap" ng-if="!vm.loading && vm.claims.length > 0">
+        <table class="apex-table">
+            <thead>
+            <tr>
+                <th>Claim No.</th>
+                <th>Policy</th>
+                <th>Loss Date</th>
+                <th>Reported</th>
+                <th>Status</th>
+                <th>Reserve</th>
+                <th>Paid</th>
+                <th>Handler</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr class="clickable" ng-repeat="c in vm.claims">
+                <td><a class="apex-table__link" ng-href="#!/claims/{{c.id}}">{{c.claimNumber}}</a></td>
+                <td>{{c.policyNumber || '—'}}</td>
+                <td>{{c.dateOfLoss | date:'dd MMM yyyy'}}</td>
+                <td>{{c.dateReported | date:'dd MMM yyyy'}}</td>
+                <td><apex-status-badge kind="'claim'" value="c.status"></apex-status-badge></td>
+                <td>{{c.reserveAmount | currency:'£':0}}</td>
+                <td>{{c.paidAmount | currency:'£':0}}</td>
+                <td>{{c.handlerName || '—'}}</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

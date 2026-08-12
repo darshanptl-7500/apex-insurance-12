@@ -1,0 +1,7 @@
+# Modern evergreen browsers only — avoids Angular 8's ES5 "differential loading"
+# bundle (which targets IE11) since this demo doesn't need to support it, and
+# that codepath has known issues with newer Node.js source-map tooling.
+last 2 Chrome versions
+last 2 Firefox versions
+last 2 Edge versions
+last 2 Safari versions

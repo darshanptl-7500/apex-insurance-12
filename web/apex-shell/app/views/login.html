@@ -1,0 +1,41 @@
+<div class="apex-login">
+    <div class="apex-login__panel">
+        <div class="apex-login__brand">
+            <span class="apex-login__mark">&#9670;</span>
+            <h1>Apex Insurance</h1>
+            <p>Underwriting Portal</p>
+        </div>
+        <div class="apex-login__body">
+            <div class="apex-alert apex-alert--danger" ng-if="vm.error">{{vm.error}}</div>
+
+            <form name="loginForm" ng-submit="vm.submit()" novalidate>
+                <div class="apex-form-row">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" ng-model="vm.credentials.username"
+                           autocomplete="username" autofocus>
+                </div>
+                <div class="apex-form-row">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" ng-model="vm.credentials.password"
+                           autocomplete="current-password">
+                </div>
+                <button type="submit" class="apex-btn apex-btn--primary" ng-disabled="vm.busy">
+                    {{vm.busy ? 'Signing in…' : 'Sign in'}}
+                </button>
+            </form>
+
+            <div class="apex-login__demo" ng-if="vm.demoAccounts.length">
+                <div class="apex-login__demo-title">Demo roles</div>
+                <div class="apex-login__demo-hint">Password for all: <code>{{vm.demoPassword}}</code></div>
+                <ul class="apex-login__demo-list">
+                    <li ng-repeat="a in vm.demoAccounts">
+                        <button type="button" class="apex-login__demo-btn" ng-click="vm.useDemo(a)" ng-disabled="vm.busy">
+                            <span class="apex-login__demo-role">{{a.role}}</span>
+                            <span class="apex-login__demo-meta">{{a.name}} &middot; <code>{{a.username}}</code></span>
+                        </button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>

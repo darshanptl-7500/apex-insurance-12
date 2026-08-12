@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="apexApp">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apex Insurance &mdash; Underwriting Workbench</title>
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="css/apex.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@31.3.4/styles/ag-grid.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@31.3.4/styles/ag-theme-alpine.css">
+</head>
+<body ng-controller="ShellController as shellVm">
+
+    <header class="apex-chrome" ng-if="shellVm.showChrome()">
+        <div class="apex-chrome__row apex-chrome__row--brand">
+            <div class="apex-topbar__brand">
+                <span class="apex-topbar__mark">&#9670;</span>
+                <span class="apex-topbar__name">Apex</span>
+                <span class="apex-topbar__uw">UW</span>
+                <span class="apex-topbar__tagline">Workbench</span>
+            </div>
+
+            <form class="apex-topbar__search" ng-submit="shellVm.runGlobalSearch()">
+                <select ng-model="shellVm.globalSearch.category">
+                    <option value="all">All</option>
+                    <option value="policy">Policy</option>
+                    <option value="reference">Reference</option>
+                    <option value="account">Account</option>
+                </select>
+                <input type="search" ng-model="shellVm.globalSearch.text" placeholder="Global search…">
+            </form>
+
+            <div class="apex-topbar__spacer"></div>
+
+            <div class="apex-topbar__clock">{{shellVm.now | date:'EEE, d MMM yyyy h:mm a'}}</div>
+            <a class="apex-btn apex-btn--danger apex-btn--sm" ng-href="#!/submissions/new">+ NEW RISK</a>
+            <div class="apex-topbar__user">
+                <span class="apex-topbar__username">{{shellVm.currentUser().displayName}}</span>
+                <span class="apex-topbar__role">{{shellVm.currentUser().role}}</span>
+                <button type="button" class="apex-btn apex-btn--ghost apex-btn--sm" ng-click="shellVm.logout()">Log out</button>
+            </div>
+        </div>
+
+        <div class="apex-chrome__row apex-chrome__row--nav">
+            <nav class="apex-primary-nav">
+                <a ng-href="{{shellVm.ng8Url('dashboard')}}" ng-class="{active: shellVm.isNg8('dashboard')}">Dashboard</a>
+                <a ng-href="{{shellVm.ng8Url('reporting')}}" ng-class="{active: shellVm.isNg8('reporting')}">Reporting</a>
+                <a ng-href="#!/pipeline/upcoming" ng-class="{active: shellVm.isActive('/pipeline')}">Pipeline</a>
+                <a ng-href="#!/inbox" ng-class="{active: shellVm.isActive('/inbox')}">
+                    Tasks
+                    <span class="apex-nav-badge" ng-if="shellVm.badges.openTasks">{{shellVm.badges.openTasks > 99 ? '99+' : shellVm.badges.openTasks}}</span>
+                    <span class="apex-nav-badge apex-nav-badge--da" ng-if="shellVm.badges.da">DA {{shellVm.badges.da > 99 ? '99+' : shellVm.badges.da}}</span>
+                </a>
+                <a ng-href="{{shellVm.ng8Url('caseHub')}}" ng-class="{active: shellVm.isNg8('caseHub')}">Underwriter's File</a>
+                <a ng-href="#!/search" ng-class="{active: shellVm.isActive('/search')}">Advanced Search</a>
+                <a ng-href="#!/connect" ng-class="{active: shellVm.isActive('/connect') || shellVm.isActive('/brokers')}">Connect</a>
+                <a ng-href="{{shellVm.ng8Url('modelling')}}" ng-class="{active: shellVm.isNg8('modelling')}">Pricing</a>
+                <a ng-href="#!/support" ng-class="{active: shellVm.isActive('/support')}">Support</a>
+                <a ng-href="{{shellVm.deepLinks.openBox}}" ng-class="{active: shellVm.isActive('/openbox')}">Open Box</a>
+                <a ng-href="{{shellVm.deepLinks.ePlacement}}" target="_blank" rel="noopener">
+                    E-Placement
+                    <span class="apex-nav-badge" ng-if="shellVm.badges.ePlacement">{{shellVm.badges.ePlacement > 99 ? '99+' : shellVm.badges.ePlacement}}</span>
+                </a>
+                <a ng-if="shellVm.isAdmin()" ng-href="{{shellVm.ng8Url('admin')}}" ng-class="{active: shellVm.isNg8('admin')}">Admin</a>
+            </nav>
+
+            <div class="apex-chrome__tools">
+                <div class="apex-dropdown">
+                    <button type="button" class="apex-btn apex-btn--ghost apex-btn--sm">Links ▾</button>
+                    <div class="apex-dropdown__menu">
+                        <a ng-href="{{shellVm.deepLinks.openBox}}">Open Box</a>
+                        <a ng-href="{{shellVm.deepLinks.ePlacement}}" target="_blank" rel="noopener">E-Placement</a>
+                        <a ng-href="{{shellVm.deepLinks.selfService}}" target="_blank" rel="noopener">Self Service</a>
+                        <a href="https://www.apexinsurance.local" target="_blank" rel="noopener">Apex</a>
+                    </div>
+                </div>
+                <div class="apex-dropdown">
+                    <button type="button" class="apex-btn apex-btn--ghost apex-btn--sm">ROE {{shellVm.roe}} ▾</button>
+                    <div class="apex-dropdown__menu">
+                        <a href="" ng-click="shellVm.setRoe('GBP')">GBP (base)</a>
+                        <a href="" ng-click="shellVm.setRoe('USD')">USD</a>
+                        <a href="" ng-click="shellVm.setRoe('EUR')">EUR</a>
+                    </div>
+                </div>
+                <button type="button" class="apex-btn apex-btn--ghost apex-btn--sm" ng-click="shellVm.refresh()" title="Refresh">↻</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="apex-body apex-body--full" ng-if="shellVm.showChrome()">
+        <main class="apex-content apex-content--dense" ng-view></main>
+    </div>
+
+    <main ng-if="!shellVm.showChrome()" ng-view></main>
+
+    <footer class="apex-footer">
+        <span>&copy; {{shellVm.year}} Apex Insurance Group. Open Box is golden source for bound policy data.</span>
+        <span>ROE {{shellVm.roe}}</span>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/ag-grid-community@31.3.4/dist/ag-grid-community.min.noStyle.js"></script>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular-route.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular-animate.min.js"></script>
+
+    <script src="config.js"></script>
+    <script src="app/app.js"></script>
+    <script src="app/app.config.js"></script>
+    <script src="app/app.run.js"></script>
+    <script src="app/services/auth.service.js"></script>
+    <script src="app/services/api.service.js"></script>
+    <script src="app/directives/status-badge.directive.js"></script>
+    <script src="app/directives/apex-empty-state.directive.js"></script>
+    <script src="app/controllers/login.controller.js"></script>
+    <script src="app/controllers/shell.controller.js"></script>
+    <script src="app/controllers/pipeline.controller.js"></script>
+    <script src="app/controllers/search.controller.js"></script>
+    <script src="app/controllers/openbox.controller.js"></script>
+    <script src="app/controllers/connect.controller.js"></script>
+    <script src="app/controllers/support.controller.js"></script>
+    <script src="app/controllers/submissions-list.controller.js"></script>
+    <script src="app/controllers/submission-create.controller.js"></script>
+    <script src="app/controllers/submission-detail.controller.js"></script>
+    <script src="app/controllers/quotes.controller.js"></script>
+    <script src="app/controllers/policies-list.controller.js"></script>
+    <script src="app/controllers/policy-detail.controller.js"></script>
+    <script src="app/controllers/claims-list.controller.js"></script>
+    <script src="app/controllers/claim-detail.controller.js"></script>
+    <script src="app/controllers/referrals.controller.js"></script>
+    <script src="app/controllers/inbox.controller.js"></script>
+    <script src="app/controllers/task-detail.controller.js"></script>
+    <script src="app/controllers/renewals.controller.js"></script>
+    <script src="app/controllers/brokers-list.controller.js"></script>
+    <script src="app/controllers/broker-detail.controller.js"></script>
+    <script src="app/controllers/documents.controller.js"></script>
+</body>
+</html>

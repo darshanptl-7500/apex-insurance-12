@@ -1,0 +1,56 @@
+<div class="apex-page-header">
+  <div class="apex-page-header__title">
+    <h1>Underwriter's File</h1>
+    <div class="apex-page-header__subtitle">Search submissions · column filters with operators · paged grid</div>
+  </div>
+</div>
+
+<form class="uw-list-toolbar" (ngSubmit)="load()">
+  <div class="uw-list-toolbar__row">
+    <div class="uw-list-field uw-list-field--search">
+      <label for="uwf-search">Search</label>
+      <input id="uwf-search" type="search" name="search" [(ngModel)]="filters.search"
+             placeholder="Submission #, insured name…">
+    </div>
+    <div class="uw-list-field">
+      <label for="uwf-status">Status</label>
+      <select id="uwf-status" name="status" [(ngModel)]="filters.status">
+        <option value="">All</option>
+        <option *ngFor="let s of statusOptions" [value]="s">{{ s }}</option>
+      </select>
+    </div>
+    <div class="uw-list-field">
+      <label for="uwf-lob">Business Area</label>
+      <select id="uwf-lob" name="lineOfBusiness" [(ngModel)]="filters.lineOfBusiness">
+        <option value="">All areas</option>
+        <option *ngFor="let l of lobOptions" [value]="l">{{ l }}</option>
+      </select>
+    </div>
+    <div class="uw-list-field uw-list-field--actions">
+      <label class="uw-list-field__spacer">&nbsp;</label>
+      <div class="uw-list-actions">
+        <button type="submit" class="apex-btn apex-btn--sm apex-btn--primary">Apply</button>
+        <button type="button" class="apex-btn apex-btn--ghost apex-btn--sm" (click)="clearFilters()">Clear</button>
+        <button type="button" class="apex-btn apex-btn--ghost apex-btn--sm" (click)="clearColumnFilters()">Clear col filters</button>
+      </div>
+    </div>
+  </div>
+</form>
+
+<apex-loading *ngIf="loading" label="Loading submissions…"></apex-loading>
+<div class="apex-alert apex-alert--danger" *ngIf="error && !loading">{{ error }}</div>
+
+<div class="uw-list-meta" *ngIf="!loading && !error">
+  <span>{{ filteredCount }} row{{ filteredCount === 1 ? '' : 's' }} (paged)
+    <ng-container *ngIf="totalCount > submissions.length"> · {{ totalCount }} match server filters</ng-container>
+  </span>
+  <span class="apex-text-muted">Use header filters for operators · pager below the grid</span>
+</div>
+
+<div id="apex-uwf-list-grid"
+     class="ag-theme-alpine uw-list-grid"
+     *ngIf="!loading && !error && submissions.length > 0"></div>
+
+<apex-empty-state *ngIf="!loading && !error && submissions.length === 0"
+                   title="No submissions found"
+                   message="Try widening your search or clearing the filters above."></apex-empty-state>

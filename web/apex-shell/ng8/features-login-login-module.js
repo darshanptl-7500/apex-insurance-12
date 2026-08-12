@@ -1,0 +1,179 @@
+(window["webpackJsonp"] = window["webpackJsonp"] || []).push([["features-login-login-module"],{
+
+/***/ "./node_modules/raw-loader/dist/cjs.js!./src/app/features/login/login.component.html":
+/*!*******************************************************************************************!*\
+  !*** ./node_modules/raw-loader/dist/cjs.js!./src/app/features/login/login.component.html ***!
+  \*******************************************************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony default export */ __webpack_exports__["default"] = ("<div class=\"apex-login\">\n  <div class=\"apex-login__panel\">\n    <div class=\"apex-login__brand\">\n      <span class=\"apex-login__mark\">&#9670;</span>\n      <div>\n        <div class=\"apex-login__name\">Apex Insurance</div>\n        <div class=\"apex-login__tagline\">Underwriting Portal</div>\n      </div>\n    </div>\n\n    <h1>Sign in</h1>\n    <p class=\"apex-login__subtitle\">Sign in to continue to the underwriting portal.</p>\n\n    <div class=\"apex-alert apex-alert--danger\" *ngIf=\"error\">{{ error }}</div>\n\n    <form (ngSubmit)=\"submit()\" #loginForm=\"ngForm\">\n      <div class=\"apex-form-row\">\n        <label for=\"username\">Username</label>\n        <input type=\"text\" id=\"username\" name=\"username\" [(ngModel)]=\"username\" autocomplete=\"username\" [disabled]=\"busy\" required>\n      </div>\n      <div class=\"apex-form-row\">\n        <label for=\"password\">Password</label>\n        <input type=\"password\" id=\"password\" name=\"password\" [(ngModel)]=\"password\" autocomplete=\"current-password\" [disabled]=\"busy\" required>\n      </div>\n\n      <div class=\"apex-btn-row\">\n        <button type=\"submit\" class=\"apex-btn apex-btn--primary apex-w-full\" [disabled]=\"busy\">\n          {{ busy ? 'Signing in…' : 'Sign in' }}\n        </button>\n      </div>\n    </form>\n\n    <div class=\"apex-login__demo\" *ngIf=\"demoAccounts.length\">\n      <div class=\"apex-login__demo-title\">Demo roles</div>\n      <div class=\"apex-login__demo-hint\">Password for all: <code>{{ demoPassword }}</code></div>\n      <ul class=\"apex-login__demo-list\">\n        <li *ngFor=\"let a of demoAccounts\">\n          <button type=\"button\" class=\"apex-login__demo-btn\" (click)=\"useDemo(a)\" [disabled]=\"busy\">\n            <span class=\"apex-login__demo-role\">{{ a.role }}</span>\n            <span class=\"apex-login__demo-meta\">{{ a.name }} · <code>{{ a.username }}</code></span>\n          </button>\n        </li>\n      </ul>\n    </div>\n  </div>\n</div>\n");
+
+/***/ }),
+
+/***/ "./src/app/features/login/login-routing.module.ts":
+/*!********************************************************!*\
+  !*** ./src/app/features/login/login-routing.module.ts ***!
+  \********************************************************/
+/*! exports provided: LoginRoutingModule */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "LoginRoutingModule", function() { return LoginRoutingModule; });
+/* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! tslib */ "./node_modules/tslib/tslib.es6.js");
+/* harmony import */ var _angular_core__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @angular/core */ "./node_modules/@angular/core/fesm2015/core.js");
+/* harmony import */ var _angular_router__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @angular/router */ "./node_modules/@angular/router/fesm2015/router.js");
+/* harmony import */ var _login_component__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./login.component */ "./src/app/features/login/login.component.ts");
+
+
+
+
+const routes = [
+    { path: '', component: _login_component__WEBPACK_IMPORTED_MODULE_3__["LoginComponent"] }
+];
+let LoginRoutingModule = class LoginRoutingModule {
+};
+LoginRoutingModule = tslib__WEBPACK_IMPORTED_MODULE_0__["__decorate"]([
+    Object(_angular_core__WEBPACK_IMPORTED_MODULE_1__["NgModule"])({
+        imports: [_angular_router__WEBPACK_IMPORTED_MODULE_2__["RouterModule"].forChild(routes)],
+        exports: [_angular_router__WEBPACK_IMPORTED_MODULE_2__["RouterModule"]]
+    })
+], LoginRoutingModule);
+
+
+
+/***/ }),
+
+/***/ "./src/app/features/login/login.component.css":
+/*!****************************************************!*\
+  !*** ./src/app/features/login/login.component.css ***!
+  \****************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony default export */ __webpack_exports__["default"] = (":host {\n  display: block;\n}\n\n.apex-login {\n  min-height: 100vh;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  background: linear-gradient(160deg, var(--apex-navy) 0%, var(--apex-navy-light) 55%, var(--apex-accent) 130%);\n  padding: 24px;\n}\n\n.apex-login__panel {\n  background: var(--apex-surface);\n  border-radius: 6px;\n  box-shadow: 0 18px 46px rgba(11, 31, 51, 0.35);\n  padding: 36px 38px 30px 38px;\n  width: 100%;\n  max-width: 420px;\n}\n\n.apex-login__brand { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; }\n\n.apex-login__mark { font-size: 26px; color: var(--apex-gold); }\n\n.apex-login__name { font-family: 'Libre Baskerville', Georgia, serif; font-size: 19px; font-weight: 700; color: var(--apex-navy); }\n\n.apex-login__tagline { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--apex-text-muted); }\n\n.apex-login__panel h1 { margin-bottom: 4px; }\n\n.apex-login__subtitle { color: var(--apex-text-muted); font-size: 12.5px; margin: 0 0 20px 0; }\n\n.apex-login__demo-link {\n  display: block;\n  width: 100%;\n  text-align: center;\n  background: none;\n  border: none;\n  color: var(--apex-accent);\n  font-size: 12px;\n  cursor: pointer;\n  margin-top: 14px;\n  padding: 6px;\n}\n\n.apex-login__demo-link:hover { text-decoration: underline; }\n\n.apex-login__demo {\n  margin-top: 20px;\n  padding: 14px;\n  background: #EEF2F6;\n  border-radius: 4px;\n  font-size: 11.5px;\n  color: var(--apex-text-muted);\n}\n\n.apex-login__demo-title {\n  font-weight: 700;\n  color: var(--apex-navy);\n  font-size: 12px;\n  text-transform: uppercase;\n  letter-spacing: 0.06em;\n  margin-bottom: 4px;\n}\n\n.apex-login__demo-hint { margin-bottom: 10px; }\n\n.apex-login__demo code {\n  background: #dfe6ee;\n  padding: 1px 5px;\n  border-radius: 2px;\n  color: var(--apex-navy);\n}\n\n.apex-login__demo-list {\n  list-style: none;\n  margin: 0;\n  padding: 0;\n  display: flex;\n  flex-direction: column;\n  gap: 6px;\n}\n\n.apex-login__demo-btn {\n  display: flex;\n  flex-direction: column;\n  align-items: flex-start;\n  gap: 2px;\n  width: 100%;\n  text-align: left;\n  padding: 9px 12px;\n  border: 1px solid var(--apex-border);\n  border-radius: 4px;\n  background: #FFFFFF;\n  cursor: pointer;\n  color: inherit;\n  font: inherit;\n}\n\n.apex-login__demo-btn:hover:not(:disabled) {\n  border-color: var(--apex-accent);\n  background: #F7FAFC;\n}\n\n.apex-login__demo-btn:disabled { opacity: 0.6; cursor: wait; }\n\n.apex-login__demo-role { font-weight: 600; color: var(--apex-navy); font-size: 12.5px; }\n\n.apex-login__demo-meta { color: var(--apex-text-muted); font-size: 11px; }\n\n.apex-login__footer {\n  margin-top: 22px;\n  padding-top: 16px;\n  border-top: 1px solid var(--apex-border);\n  text-align: center;\n  font-size: 12px;\n}\n\n/*# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbInNyYy9hcHAvZmVhdHVyZXMvbG9naW4vbG9naW4uY29tcG9uZW50LmNzcyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiQUFBQTtFQUNFLGNBQWM7QUFDaEI7O0FBRUE7RUFDRSxpQkFBaUI7RUFDakIsYUFBYTtFQUNiLG1CQUFtQjtFQUNuQix1QkFBdUI7RUFDdkIsNkdBQTZHO0VBQzdHLGFBQWE7QUFDZjs7QUFFQTtFQUNFLCtCQUErQjtFQUMvQixrQkFBa0I7RUFDbEIsOENBQThDO0VBQzlDLDRCQUE0QjtFQUM1QixXQUFXO0VBQ1gsZ0JBQWdCO0FBQ2xCOztBQUVBLHFCQUFxQixhQUFhLEVBQUUsbUJBQW1CLEVBQUUsU0FBUyxFQUFFLG1CQUFtQixFQUFFOztBQUN6RixvQkFBb0IsZUFBZSxFQUFFLHVCQUF1QixFQUFFOztBQUM5RCxvQkFBb0IsZ0RBQWdELEVBQUUsZUFBZSxFQUFFLGdCQUFnQixFQUFFLHVCQUF1QixFQUFFOztBQUNsSSx1QkFBdUIsaUJBQWlCLEVBQUUseUJBQXlCLEVBQUUsc0JBQXNCLEVBQUUsNkJBQTZCLEVBQUU7O0FBRTVILHdCQUF3QixrQkFBa0IsRUFBRTs7QUFDNUMsd0JBQXdCLDZCQUE2QixFQUFFLGlCQUFpQixFQUFFLGtCQUFrQixFQUFFOztBQUU5RjtFQUNFLGNBQWM7RUFDZCxXQUFXO0VBQ1gsa0JBQWtCO0VBQ2xCLGdCQUFnQjtFQUNoQixZQUFZO0VBQ1oseUJBQXlCO0VBQ3pCLGVBQWU7RUFDZixlQUFlO0VBQ2YsZ0JBQWdCO0VBQ2hCLFlBQVk7QUFDZDs7QUFDQSwrQkFBK0IsMEJBQTBCLEVBQUU7O0FBRTNEO0VBQ0UsZ0JBQWdCO0VBQ2hCLGFBQWE7RUFDYixtQkFBbUI7RUFDbkIsa0JBQWtCO0VBQ2xCLGlCQUFpQjtFQUNqQiw2QkFBNkI7QUFDL0I7O0FBQ0E7RUFDRSxnQkFBZ0I7RUFDaEIsdUJBQXVCO0VBQ3ZCLGVBQWU7RUFDZix5QkFBeUI7RUFDekIsc0JBQXNCO0VBQ3RCLGtCQUFrQjtBQUNwQjs7QUFDQSx5QkFBeUIsbUJBQW1CLEVBQUU7O0FBQzlDO0VBQ0UsbUJBQW1CO0VBQ25CLGdCQUFnQjtFQUNoQixrQkFBa0I7RUFDbEIsdUJBQXVCO0FBQ3pCOztBQUNBO0VBQ0UsZ0JBQWdCO0VBQ2hCLFNBQVM7RUFDVCxVQUFVO0VBQ1YsYUFBYTtFQUNiLHNCQUFzQjtFQUN0QixRQUFRO0FBQ1Y7O0FBQ0E7RUFDRSxhQUFhO0VBQ2Isc0JBQXNCO0VBQ3RCLHVCQUF1QjtFQUN2QixRQUFRO0VBQ1IsV0FBVztFQUNYLGdCQUFnQjtFQUNoQixpQkFBaUI7RUFDakIsb0NBQW9DO0VBQ3BDLGtCQUFrQjtFQUNsQixtQkFBbUI7RUFDbkIsZUFBZTtFQUNmLGNBQWM7RUFDZCxhQUFhO0FBQ2Y7O0FBQ0E7RUFDRSxnQ0FBZ0M7RUFDaEMsbUJBQW1CO0FBQ3JCOztBQUNBLGlDQUFpQyxZQUFZLEVBQUUsWUFBWSxFQUFFOztBQUM3RCx5QkFBeUIsZ0JBQWdCLEVBQUUsdUJBQXVCLEVBQUUsaUJBQWlCLEVBQUU7O0FBQ3ZGLHlCQUF5Qiw2QkFBNkIsRUFBRSxlQUFlLEVBQUU7O0FBRXpFO0VBQ0UsZ0JBQWdCO0VBQ2hCLGlCQUFpQjtFQUNqQix3Q0FBd0M7RUFDeEMsa0JBQWtCO0VBQ2xCLGVBQWU7QUFDakIiLCJmaWxlIjoic3JjL2FwcC9mZWF0dXJlcy9sb2dpbi9sb2dpbi5jb21wb25lbnQuY3NzIiwic291cmNlc0NvbnRlbnQiOlsiOmhvc3Qge1xuICBkaXNwbGF5OiBibG9jaztcbn1cblxuLmFwZXgtbG9naW4ge1xuICBtaW4taGVpZ2h0OiAxMDB2aDtcbiAgZGlzcGxheTogZmxleDtcbiAgYWxpZ24taXRlbXM6IGNlbnRlcjtcbiAganVzdGlmeS1jb250ZW50OiBjZW50ZXI7XG4gIGJhY2tncm91bmQ6IGxpbmVhci1ncmFkaWVudCgxNjBkZWcsIHZhcigtLWFwZXgtbmF2eSkgMCUsIHZhcigtLWFwZXgtbmF2eS1saWdodCkgNTUlLCB2YXIoLS1hcGV4LWFjY2VudCkgMTMwJSk7XG4gIHBhZGRpbmc6IDI0cHg7XG59XG5cbi5hcGV4LWxvZ2luX19wYW5lbCB7XG4gIGJhY2tncm91bmQ6IHZhcigtLWFwZXgtc3VyZmFjZSk7XG4gIGJvcmRlci1yYWRpdXM6IDZweDtcbiAgYm94LXNoYWRvdzogMCAxOHB4IDQ2cHggcmdiYSgxMSwgMzEsIDUxLCAwLjM1KTtcbiAgcGFkZGluZzogMzZweCAzOHB4IDMwcHggMzhweDtcbiAgd2lkdGg6IDEwMCU7XG4gIG1heC13aWR0aDogNDIwcHg7XG59XG5cbi5hcGV4LWxvZ2luX19icmFuZCB7IGRpc3BsYXk6IGZsZXg7IGFsaWduLWl0ZW1zOiBjZW50ZXI7IGdhcDogMTJweDsgbWFyZ2luLWJvdHRvbTogMjJweDsgfVxuLmFwZXgtbG9naW5fX21hcmsgeyBmb250LXNpemU6IDI2cHg7IGNvbG9yOiB2YXIoLS1hcGV4LWdvbGQpOyB9XG4uYXBleC1sb2dpbl9fbmFtZSB7IGZvbnQtZmFtaWx5OiAnTGlicmUgQmFza2VydmlsbGUnLCBHZW9yZ2lhLCBzZXJpZjsgZm9udC1zaXplOiAxOXB4OyBmb250LXdlaWdodDogNzAwOyBjb2xvcjogdmFyKC0tYXBleC1uYXZ5KTsgfVxuLmFwZXgtbG9naW5fX3RhZ2xpbmUgeyBmb250LXNpemU6IDEwLjVweDsgdGV4dC10cmFuc2Zvcm06IHVwcGVyY2FzZTsgbGV0dGVyLXNwYWNpbmc6IDAuMDhlbTsgY29sb3I6IHZhcigtLWFwZXgtdGV4dC1tdXRlZCk7IH1cblxuLmFwZXgtbG9naW5fX3BhbmVsIGgxIHsgbWFyZ2luLWJvdHRvbTogNHB4OyB9XG4uYXBleC1sb2dpbl9fc3VidGl0bGUgeyBjb2xvcjogdmFyKC0tYXBleC10ZXh0LW11dGVkKTsgZm9udC1zaXplOiAxMi41cHg7IG1hcmdpbjogMCAwIDIwcHggMDsgfVxuXG4uYXBleC1sb2dpbl9fZGVtby1saW5rIHtcbiAgZGlzcGxheTogYmxvY2s7XG4gIHdpZHRoOiAxMDAlO1xuICB0ZXh0LWFsaWduOiBjZW50ZXI7XG4gIGJhY2tncm91bmQ6IG5vbmU7XG4gIGJvcmRlcjogbm9uZTtcbiAgY29sb3I6IHZhcigtLWFwZXgtYWNjZW50KTtcbiAgZm9udC1zaXplOiAxMnB4O1xuICBjdXJzb3I6IHBvaW50ZXI7XG4gIG1hcmdpbi10b3A6IDE0cHg7XG4gIHBhZGRpbmc6IDZweDtcbn1cbi5hcGV4LWxvZ2luX19kZW1vLWxpbms6aG92ZXIgeyB0ZXh0LWRlY29yYXRpb246IHVuZGVybGluZTsgfVxuXG4uYXBleC1sb2dpbl9fZGVtbyB7XG4gIG1hcmdpbi10b3A6IDIwcHg7XG4gIHBhZGRpbmc6IDE0cHg7XG4gIGJhY2tncm91bmQ6ICNFRUYyRjY7XG4gIGJvcmRlci1yYWRpdXM6IDRweDtcbiAgZm9udC1zaXplOiAxMS41cHg7XG4gIGNvbG9yOiB2YXIoLS1hcGV4LXRleHQtbXV0ZWQpO1xufVxuLmFwZXgtbG9naW5fX2RlbW8tdGl0bGUge1xuICBmb250LXdlaWdodDogNzAwO1xuICBjb2xvcjogdmFyKC0tYXBleC1uYXZ5KTtcbiAgZm9udC1zaXplOiAxMnB4O1xuICB0ZXh0LXRyYW5zZm9ybTogdXBwZXJjYXNlO1xuICBsZXR0ZXItc3BhY2luZzogMC4wNmVtO1xuICBtYXJnaW4tYm90dG9tOiA0cHg7XG59XG4uYXBleC1sb2dpbl9fZGVtby1oaW50IHsgbWFyZ2luLWJvdHRvbTogMTBweDsgfVxuLmFwZXgtbG9naW5fX2RlbW8gY29kZSB7XG4gIGJhY2tncm91bmQ6ICNkZmU2ZWU7XG4gIHBhZGRpbmc6IDFweCA1cHg7XG4gIGJvcmRlci1yYWRpdXM6IDJweDtcbiAgY29sb3I6IHZhcigtLWFwZXgtbmF2eSk7XG59XG4uYXBleC1sb2dpbl9fZGVtby1saXN0IHtcbiAgbGlzdC1zdHlsZTogbm9uZTtcbiAgbWFyZ2luOiAwO1xuICBwYWRkaW5nOiAwO1xuICBkaXNwbGF5OiBmbGV4O1xuICBmbGV4LWRpcmVjdGlvbjogY29sdW1uO1xuICBnYXA6IDZweDtcbn1cbi5hcGV4LWxvZ2luX19kZW1vLWJ0biB7XG4gIGRpc3BsYXk6IGZsZXg7XG4gIGZsZXgtZGlyZWN0aW9uOiBjb2x1bW47XG4gIGFsaWduLWl0ZW1zOiBmbGV4LXN0YXJ0O1xuICBnYXA6IDJweDtcbiAgd2lkdGg6IDEwMCU7XG4gIHRleHQtYWxpZ246IGxlZnQ7XG4gIHBhZGRpbmc6IDlweCAxMnB4O1xuICBib3JkZXI6IDFweCBzb2xpZCB2YXIoLS1hcGV4LWJvcmRlcik7XG4gIGJvcmRlci1yYWRpdXM6IDRweDtcbiAgYmFja2dyb3VuZDogI0ZGRkZGRjtcbiAgY3Vyc29yOiBwb2ludGVyO1xuICBjb2xvcjogaW5oZXJpdDtcbiAgZm9udDogaW5oZXJpdDtcbn1cbi5hcGV4LWxvZ2luX19kZW1vLWJ0bjpob3Zlcjpub3QoOmRpc2FibGVkKSB7XG4gIGJvcmRlci1jb2xvcjogdmFyKC0tYXBleC1hY2NlbnQpO1xuICBiYWNrZ3JvdW5kOiAjRjdGQUZDO1xufVxuLmFwZXgtbG9naW5fX2RlbW8tYnRuOmRpc2FibGVkIHsgb3BhY2l0eTogMC42OyBjdXJzb3I6IHdhaXQ7IH1cbi5hcGV4LWxvZ2luX19kZW1vLXJvbGUgeyBmb250LXdlaWdodDogNjAwOyBjb2xvcjogdmFyKC0tYXBleC1uYXZ5KTsgZm9udC1zaXplOiAxMi41cHg7IH1cbi5hcGV4LWxvZ2luX19kZW1vLW1ldGEgeyBjb2xvcjogdmFyKC0tYXBleC10ZXh0LW11dGVkKTsgZm9udC1zaXplOiAxMXB4OyB9XG5cbi5hcGV4LWxvZ2luX19mb290ZXIge1xuICBtYXJnaW4tdG9wOiAyMnB4O1xuICBwYWRkaW5nLXRvcDogMTZweDtcbiAgYm9yZGVyLXRvcDogMXB4IHNvbGlkIHZhcigtLWFwZXgtYm9yZGVyKTtcbiAgdGV4dC1hbGlnbjogY2VudGVyO1xuICBmb250LXNpemU6IDEycHg7XG59XG4iXX0= */");
+
+/***/ }),
+
+/***/ "./src/app/features/login/login.component.ts":
+/*!***************************************************!*\
+  !*** ./src/app/features/login/login.component.ts ***!
+  \***************************************************/
+/*! exports provided: LoginComponent */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "LoginComponent", function() { return LoginComponent; });
+/* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! tslib */ "./node_modules/tslib/tslib.es6.js");
+/* harmony import */ var _angular_core__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @angular/core */ "./node_modules/@angular/core/fesm2015/core.js");
+/* harmony import */ var _angular_router__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @angular/router */ "./node_modules/@angular/router/fesm2015/router.js");
+/* harmony import */ var _core_auth_service__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../core/auth.service */ "./src/app/core/auth.service.ts");
+/* harmony import */ var _environments_environment__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../../environments/environment */ "./src/environments/environment.ts");
+
+
+
+
+
+let LoginComponent = class LoginComponent {
+    constructor(auth, router) {
+        this.auth = auth;
+        this.router = router;
+        this.username = '';
+        this.password = '';
+        this.busy = false;
+        this.error = null;
+        this.demoAccounts = _environments_environment__WEBPACK_IMPORTED_MODULE_4__["environment"].demoAccounts || [];
+        this.demoPassword = _environments_environment__WEBPACK_IMPORTED_MODULE_4__["environment"].demoPassword || 'Password1!';
+    }
+    submit(account) {
+        if (!this.username || !this.password) {
+            this.error = 'Enter both a username and password.';
+            return;
+        }
+        this.busy = true;
+        this.error = null;
+        this.auth.login(this.username, this.password).subscribe(() => {
+            this.busy = false;
+            this.router.navigateByUrl((account && account.home) || '/dashboard');
+        }, (err) => {
+            this.busy = false;
+            if (err && err.status === 0) {
+                this.error = `Could not reach the Apex API at ${_environments_environment__WEBPACK_IMPORTED_MODULE_4__["environment"].apiBaseUrl}. Confirm the service is running.`;
+            }
+            else if (err && err.status === 401) {
+                this.error = (err.error && err.error.message) || 'Invalid username or password.';
+            }
+            else {
+                this.error = (err && err.error && err.error.message) || 'Login failed. Please try again.';
+            }
+        });
+    }
+    useDemo(account) {
+        if (!account || this.busy) {
+            return;
+        }
+        this.username = account.username;
+        this.password = this.demoPassword;
+        this.submit(account);
+    }
+};
+LoginComponent.ctorParameters = () => [
+    { type: _core_auth_service__WEBPACK_IMPORTED_MODULE_3__["AuthService"] },
+    { type: _angular_router__WEBPACK_IMPORTED_MODULE_2__["Router"] }
+];
+LoginComponent = tslib__WEBPACK_IMPORTED_MODULE_0__["__decorate"]([
+    Object(_angular_core__WEBPACK_IMPORTED_MODULE_1__["Component"])({
+        selector: 'apex-login',
+        template: tslib__WEBPACK_IMPORTED_MODULE_0__["__importDefault"](__webpack_require__(/*! raw-loader!./login.component.html */ "./node_modules/raw-loader/dist/cjs.js!./src/app/features/login/login.component.html")).default,
+        styles: [tslib__WEBPACK_IMPORTED_MODULE_0__["__importDefault"](__webpack_require__(/*! ./login.component.css */ "./src/app/features/login/login.component.css")).default]
+    }),
+    tslib__WEBPACK_IMPORTED_MODULE_0__["__metadata"]("design:paramtypes", [_core_auth_service__WEBPACK_IMPORTED_MODULE_3__["AuthService"], _angular_router__WEBPACK_IMPORTED_MODULE_2__["Router"]])
+], LoginComponent);
+
+
+
+/***/ }),
+
+/***/ "./src/app/features/login/login.module.ts":
+/*!************************************************!*\
+  !*** ./src/app/features/login/login.module.ts ***!
+  \************************************************/
+/*! exports provided: LoginModule */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "LoginModule", function() { return LoginModule; });
+/* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! tslib */ "./node_modules/tslib/tslib.es6.js");
+/* harmony import */ var _angular_core__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @angular/core */ "./node_modules/@angular/core/fesm2015/core.js");
+/* harmony import */ var _angular_common__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @angular/common */ "./node_modules/@angular/common/fesm2015/common.js");
+/* harmony import */ var _angular_forms__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @angular/forms */ "./node_modules/@angular/forms/fesm2015/forms.js");
+/* harmony import */ var _login_routing_module__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./login-routing.module */ "./src/app/features/login/login-routing.module.ts");
+/* harmony import */ var _login_component__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./login.component */ "./src/app/features/login/login.component.ts");
+
+
+
+
+
+
+let LoginModule = class LoginModule {
+};
+LoginModule = tslib__WEBPACK_IMPORTED_MODULE_0__["__decorate"]([
+    Object(_angular_core__WEBPACK_IMPORTED_MODULE_1__["NgModule"])({
+        declarations: [_login_component__WEBPACK_IMPORTED_MODULE_5__["LoginComponent"]],
+        imports: [_angular_common__WEBPACK_IMPORTED_MODULE_2__["CommonModule"], _angular_forms__WEBPACK_IMPORTED_MODULE_3__["FormsModule"], _login_routing_module__WEBPACK_IMPORTED_MODULE_4__["LoginRoutingModule"]]
+    })
+], LoginModule);
+
+
+
+/***/ })
+
+}]);
+//# sourceMappingURL=features-login-login-module.js.map

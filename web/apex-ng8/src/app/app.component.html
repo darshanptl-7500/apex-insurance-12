@@ -1,0 +1,53 @@
+<ng-container *ngIf="authenticated; else standalone">
+  <div class="apex-shell">
+
+    <header class="apex-chrome">
+      <div class="apex-chrome__row apex-chrome__row--brand">
+        <div class="apex-topbar__brand">
+          <span class="apex-topbar__mark">&#9670;</span>
+          <span class="apex-topbar__name">Apex</span>
+          <span class="apex-topbar__uw">UW</span>
+          <span class="apex-topbar__tagline">Workbench</span>
+        </div>
+        <div class="apex-topbar__spacer"></div>
+        <a class="apex-btn apex-btn--danger apex-btn--sm" [href]="shellUrl('/submissions/new')">+ NEW RISK</a>
+        <div class="apex-topbar__user">
+          <span class="apex-topbar__username">{{ user.displayName }}</span>
+          <span class="apex-topbar__role">{{ user.role }}</span>
+          <button type="button" class="apex-btn apex-btn--ghost apex-btn--sm" (click)="logout()">Log out</button>
+        </div>
+      </div>
+
+      <div class="apex-chrome__row apex-chrome__row--nav">
+        <nav class="apex-primary-nav">
+          <a routerLink="/dashboard" [class.active]="isActive('/dashboard')">Dashboard</a>
+          <a routerLink="/reporting" [class.active]="isActive('/reporting')">Reporting</a>
+          <a [href]="shellUrl('/pipeline/upcoming')">Pipeline</a>
+          <a [href]="shellUrl('/inbox')">Tasks</a>
+          <a routerLink="/case-hub" [class.active]="isActive('/case-hub')">Underwriter's File</a>
+          <a [href]="shellUrl('/search')">Advanced Search</a>
+          <a [href]="shellUrl('/connect')">Connect</a>
+          <a routerLink="/modelling" [class.active]="isActive('/modelling')">Pricing</a>
+          <a [href]="shellUrl('/support')">Support</a>
+          <a *ngIf="isAdmin()" routerLink="/admin" [class.active]="isActive('/admin')">Admin</a>
+        </nav>
+      </div>
+    </header>
+
+    <div class="apex-shell__body apex-shell__body--full">
+      <main class="apex-shell__content apex-shell__content--dense">
+        <router-outlet></router-outlet>
+      </main>
+    </div>
+  </div>
+</ng-container>
+
+<ng-template #standalone>
+  <div class="apex-standalone">
+    <div class="apex-redirect-notice" *ngIf="!isLoginRoute()">
+      <div class="apex-spinner"></div>
+      <p>Redirecting to sign in&hellip;</p>
+    </div>
+    <router-outlet></router-outlet>
+  </div>
+</ng-template>

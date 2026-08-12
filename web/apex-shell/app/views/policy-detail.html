@@ -1,0 +1,161 @@
+<div class="apex-breadcrumb"><a href="#!/policies">Policies</a> / {{vm.policy.policyNumber || vm.id}}</div>
+
+<div class="apex-loading" ng-if="vm.loading">
+    <span class="apex-spinner"></span> Loading policy…
+</div>
+
+<div class="apex-alert apex-alert--danger" ng-if="vm.error && !vm.loading">{{vm.error}}</div>
+
+<div ng-if="!vm.loading && vm.policy">
+
+    <div class="apex-page-header">
+        <div class="apex-page-header__title">
+            <h1>{{vm.policy.policyNumber}}</h1>
+            <div class="apex-page-header__subtitle">
+                {{vm.enums.lineOfBusiness[vm.policy.lineOfBusiness] || vm.policy.lineOfBusiness}} &middot;
+                {{vm.policy.insuredName || '—'}}
+            </div>
+        </div>
+        <div class="apex-page-header__actions">
+            <apex-status-badge kind="'policy'" value="vm.policy.status"></apex-status-badge>
+            <button type="button" class="apex-btn apex-btn--sm" ng-click="vm.toggleEndorseForm()"
+                    ng-if="vm.policy.status === 0 || vm.policy.status === 'Active'">Endorse</button>
+            <button type="button" class="apex-btn apex-btn--danger apex-btn--sm" ng-click="vm.toggleCancelForm()"
+                    ng-if="vm.policy.status === 0 || vm.policy.status === 'Active'">Cancel Policy</button>
+            <button type="button" class="apex-btn apex-btn--primary apex-btn--sm" ng-click="vm.reinstate()"
+                    ng-if="vm.policy.status === 1 || vm.policy.status === 'Cancelled'"
+                    ng-disabled="vm.busy">Reinstate</button>
+            <a class="apex-btn apex-btn--sm" ng-href="#!/renewals">Renewal diary</a>
+        </div>
+    </div>
+
+    <div class="apex-alert apex-alert--success" ng-if="vm.actionSuccess">{{vm.actionSuccess}}</div>
+    <div class="apex-alert apex-alert--danger" ng-if="vm.actionError">{{vm.actionError}}</div>
+
+    <div class="apex-card" ng-if="vm.showEndorseForm">
+        <div class="apex-card__header"><h3>New endorsement</h3></div>
+        <form ng-submit="vm.submitEndorsement()">
+            <div class="apex-form-grid">
+                <div class="apex-form-row">
+                    <label>Effective date</label>
+                    <input type="date" ng-model="vm.endorsementDraft.effectiveDate">
+                </div>
+                <div class="apex-form-row">
+                    <label>Premium adjustment (£)</label>
+                    <input type="number" ng-model="vm.endorsementDraft.premiumChange">
+                </div>
+            </div>
+            <div class="apex-form-row">
+                <label>Description</label>
+                <textarea ng-model="vm.endorsementDraft.description" placeholder="e.g. Increase sum insured to £2,500,000"></textarea>
+            </div>
+            <div class="apex-btn-row">
+                <button type="submit" class="apex-btn apex-btn--primary" ng-disabled="vm.busy">
+                    {{vm.busy ? 'Saving…' : 'Record Endorsement'}}
+                </button>
+                <button type="button" class="apex-btn apex-btn--ghost" ng-click="vm.showEndorseForm = false">Cancel</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="apex-card" ng-if="vm.showCancelForm">
+        <div class="apex-card__header"><h3>Cancel policy</h3></div>
+        <form ng-submit="vm.submitCancellation()">
+            <div class="apex-form-grid">
+                <div class="apex-form-row">
+                    <label>Cancellation date</label>
+                    <input type="date" ng-model="vm.cancelDraft.cancellationDate">
+                </div>
+            </div>
+            <div class="apex-form-row">
+                <label>Reason</label>
+                <textarea ng-model="vm.cancelDraft.reason" placeholder="e.g. Non-payment of premium"></textarea>
+            </div>
+            <div class="apex-btn-row">
+                <button type="submit" class="apex-btn apex-btn--danger" ng-disabled="vm.busy">
+                    {{vm.busy ? 'Processing…' : 'Confirm Cancellation'}}
+                </button>
+                <button type="button" class="apex-btn apex-btn--ghost" ng-click="vm.showCancelForm = false">Back</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="apex-grid-2">
+        <div>
+            <div class="apex-tabs">
+                <div class="apex-tabs__tab" ng-class="{active: vm.activeTab === 'endorsements'}" ng-click="vm.setTab('endorsements')">Endorsements</div>
+                <div class="apex-tabs__tab" ng-class="{active: vm.activeTab === 'claims'}" ng-click="vm.setTab('claims')">Claims</div>
+                <div class="apex-tabs__tab" ng-class="{active: vm.activeTab === 'documents'}" ng-click="vm.setTab('documents')">Documents</div>
+            </div>
+
+            <div class="apex-card" ng-if="vm.activeTab === 'endorsements'">
+                <apex-empty-state ng-if="vm.policy.endorsements.length === 0"
+                                   title="'No endorsements'"
+                                   message="'This policy has not been endorsed since inception.'"></apex-empty-state>
+                <table class="apex-table" ng-if="vm.policy.endorsements.length > 0">
+                    <thead><tr><th>Effective</th><th>Description</th><th>Premium Δ</th></tr></thead>
+                    <tbody>
+                    <tr ng-repeat="e in vm.policy.endorsements">
+                        <td>{{e.effectiveDate | date:'dd MMM yyyy'}}</td>
+                        <td>{{e.description}}</td>
+                        <td>{{e.premiumChange | currency:'£':0}}</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="apex-card" ng-if="vm.activeTab === 'claims'">
+                <div class="apex-card__header">
+                    <h3>Claims on this policy</h3>
+                    <a class="apex-btn apex-btn--sm" ng-href="#!/claims?policyId={{vm.id}}">View in Claims</a>
+                </div>
+                <apex-empty-state ng-if="vm.policy.claims.length === 0"
+                                   title="'No claims reported'"
+                                   message="'This policy has a clean claims history to date.'"></apex-empty-state>
+                <table class="apex-table" ng-if="vm.policy.claims.length > 0">
+                    <thead><tr><th>Claim No.</th><th>Loss Date</th><th>Status</th><th>Reserve</th><th>Paid</th></tr></thead>
+                    <tbody>
+                    <tr class="clickable" ng-repeat="c in vm.policy.claims">
+                        <td><a class="apex-table__link" ng-href="#!/claims/{{c.id}}">{{c.claimNumber}}</a></td>
+                        <td>{{c.dateOfLoss | date:'dd MMM yyyy'}}</td>
+                        <td><apex-status-badge kind="'claim'" value="c.status"></apex-status-badge></td>
+                        <td>{{c.reserveAmount | currency:'£':0}}</td>
+                        <td>{{c.paidAmount | currency:'£':0}}</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="apex-card" ng-if="vm.activeTab === 'documents'">
+                <div class="apex-card__header">
+                    <h3>Documents</h3>
+                    <a class="apex-btn apex-btn--sm" ng-href="#!/documents?policyId={{vm.id}}">Manage in Documents</a>
+                </div>
+                <apex-empty-state ng-if="vm.policy.documents.length === 0"
+                                   title="'No documents attached'"
+                                   message="'Schedules and endorsement wordings will appear here.'"></apex-empty-state>
+                <div class="apex-doc-list__row" ng-repeat="d in vm.policy.documents">
+                    <span>{{d.fileName}}</span>
+                    <span class="apex-text-muted">{{d.uploadedDate | date:'dd MMM yyyy'}}</span>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <div class="apex-card">
+                <div class="apex-card__header"><h3>Policy summary</h3></div>
+                <dl class="apex-kv">
+                    <dt>Insured</dt><dd>{{vm.policy.insuredName || '—'}}</dd>
+                    <dt>Broker</dt><dd>{{vm.policy.brokerName || '—'}}</dd>
+                    <dt>Sum Insured</dt><dd>{{vm.policy.sumInsured | currency:'£':0}}</dd>
+                    <dt>Gross Premium</dt><dd>{{vm.policy.grossPremium | currency:'£':0}}</dd>
+                    <dt>Inception</dt><dd>{{vm.policy.effectiveDate | date:'dd MMM yyyy'}}</dd>
+                    <dt>Expiry</dt><dd>{{vm.policy.expiryDate | date:'dd MMM yyyy'}}</dd>
+                    <dt>Bound</dt><dd>{{vm.policy.boundDate | date:'dd MMM yyyy'}}</dd>
+                    <dt ng-if="vm.policy.status === 1 || vm.policy.status === 'Cancelled'">Cancelled</dt>
+                    <dd ng-if="vm.policy.status === 1 || vm.policy.status === 'Cancelled'">{{vm.policy.cancelledDate | date:'dd MMM yyyy'}} — {{vm.policy.cancellationReason}}</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>

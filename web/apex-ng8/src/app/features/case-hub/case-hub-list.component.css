@@ -1,0 +1,103 @@
+:host {
+  display: block;
+}
+
+.uw-list-toolbar {
+  background: #fff;
+  border: 1px solid var(--apex-border, #C8C8C8);
+  padding: 12px 14px;
+  margin-bottom: 10px;
+}
+
+.uw-list-toolbar__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 16px;
+  align-items: flex-end;
+}
+
+.uw-list-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  flex: 0 0 160px;
+}
+
+.uw-list-field label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--apex-text-muted, #5B5B5B);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.uw-list-field__spacer {
+  visibility: hidden;
+  height: 14px;
+}
+
+.uw-list-field--search {
+  flex: 1 1 220px;
+  min-width: 180px;
+  max-width: 360px;
+}
+
+.uw-list-field--actions {
+  flex: 0 0 auto;
+}
+
+.uw-list-field input,
+.uw-list-field select {
+  width: 100%;
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--apex-border, #C8C8C8);
+  border-radius: 2px;
+  font-size: 13px;
+  background: #fff;
+}
+
+.uw-list-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.uw-list-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  margin-bottom: 6px;
+}
+
+.uw-list-grid {
+  width: 100%;
+  height: calc(100vh - 280px);
+  min-height: 420px;
+  border: 1px solid var(--apex-border, #C8C8C8);
+  background: #fff;
+}
+
+.uw-list-grid.ag-theme-alpine {
+  --ag-font-family: "Segoe UI", Arial, Helvetica, sans-serif;
+  --ag-font-size: 12px;
+  --ag-header-background-color: #EEF2F6;
+  --ag-header-foreground-color: #0B1F33;
+  --ag-border-color: var(--apex-border, #C8C8C8);
+  --ag-row-hover-color: #FFF3F3;
+  --ag-selected-row-background-color: #FFE8E8;
+  --ag-alpine-active-color: #C62828;
+}
+
+:host ::ng-deep .uw-list-grid .apex-table__link {
+  color: #1565C0;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+:host ::ng-deep .uw-list-grid .ag-header-cell-filtered {
+  background: #FFE8E8;
+}

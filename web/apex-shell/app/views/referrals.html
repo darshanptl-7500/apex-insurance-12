@@ -1,0 +1,60 @@
+<div class="apex-page-header">
+    <div class="apex-page-header__title">
+        <h1>Referral queue</h1>
+        <div class="apex-page-header__subtitle">Quotes outside underwriter authority awaiting manager decision.</div>
+    </div>
+</div>
+
+<div class="apex-alert apex-alert--danger" ng-if="vm.actionError">{{vm.actionError}}</div>
+<div class="apex-alert apex-alert--danger" ng-if="vm.error && !vm.loading">{{vm.error}}</div>
+
+<div class="apex-card">
+    <div class="apex-loading" ng-if="vm.loading">
+        <span class="apex-spinner"></span> Loading referral queue…
+    </div>
+
+    <apex-empty-state ng-if="!vm.loading && !vm.error && vm.items.length === 0"
+                       title="'No pending referrals'"
+                       message="'When underwriters raise quotes that need referral, they appear here.'"></apex-empty-state>
+
+    <div class="apex-table-wrap" ng-if="!vm.loading && vm.items.length > 0">
+        <table class="apex-table">
+            <thead>
+            <tr>
+                <th>Quote</th>
+                <th>Submission</th>
+                <th>Insured</th>
+                <th>Broker</th>
+                <th>UW</th>
+                <th>Premium</th>
+                <th>Reason</th>
+                <th>Comments</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr ng-repeat="r in vm.items">
+                <td class="apex-mono">{{r.quoteNumber}} <span class="apex-text-muted">v{{r.versionNumber}}</span></td>
+                <td><a class="apex-table__link" ng-href="#!/submissions/{{r.submissionId}}">{{r.submissionNumber}}</a></td>
+                <td>{{r.insuredName || '—'}}</td>
+                <td>{{r.brokerName || '—'}}</td>
+                <td>{{r.underwriterName || 'Unassigned'}}</td>
+                <td>{{r.grossPremium | currency:'£':0}}</td>
+                <td>{{r.referralReason || '—'}}</td>
+                <td>
+                    <input type="text" ng-model="vm.comments[r.quoteId]" placeholder="Optional comment"
+                           ng-disabled="vm.busyId === r.quoteId" style="min-width:140px">
+                </td>
+                <td class="apex-btn-row">
+                    <button type="button" class="apex-btn apex-btn--sm apex-btn--primary"
+                            ng-disabled="vm.busyId === r.quoteId" ng-click="vm.approve(r)">Approve</button>
+                    <button type="button" class="apex-btn apex-btn--sm apex-btn--ghost"
+                            ng-disabled="vm.busyId === r.quoteId" ng-click="vm.requestInfo(r)">Request info</button>
+                    <button type="button" class="apex-btn apex-btn--sm apex-btn--danger"
+                            ng-disabled="vm.busyId === r.quoteId" ng-click="vm.decline(r)">Decline</button>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

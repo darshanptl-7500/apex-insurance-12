@@ -1,0 +1,247 @@
+<div class="mi-page">
+  <div class="apex-page-header">
+    <div class="apex-page-header__title">
+      <h1>Reporting &amp; MI</h1>
+      <div class="apex-page-header__subtitle">
+        Production, broker league, pipeline aging and loss ratio — underwriter management information
+      </div>
+    </div>
+    <div class="apex-page-header__actions">
+      <button type="button" class="apex-btn apex-btn--ghost apex-btn--sm"
+              (click)="exportCurrentTab()" [disabled]="currentRowCount() === 0">
+        Export CSV
+      </button>
+      <button type="button" class="apex-btn apex-btn--ghost apex-btn--sm" (click)="load()">Refresh</button>
+    </div>
+  </div>
+
+  <div class="mi-toolbar">
+    <div class="mi-period__pills">
+      <button type="button" class="mi-pill" [class.active]="period==='mtd'" (click)="applyPeriod('mtd')">MTD</button>
+      <button type="button" class="mi-pill" [class.active]="period==='qtd'" (click)="applyPeriod('qtd')">QTD</button>
+      <button type="button" class="mi-pill" [class.active]="period==='ytd'" (click)="applyPeriod('ytd')">YTD</button>
+      <button type="button" class="mi-pill" [class.active]="period==='12m'" (click)="applyPeriod('12m')">12M</button>
+    </div>
+    <form class="mi-dates" (ngSubmit)="applyDateFilter()">
+      <label>From <input type="date" name="fromDate" [(ngModel)]="fromDate"></label>
+      <label>To <input type="date" name="toDate" [(ngModel)]="toDate"></label>
+      <button type="submit" class="apex-btn apex-btn--sm apex-btn--primary">Apply</button>
+    </form>
+  </div>
+
+  <!-- Snapshot strip -->
+  <div class="mi-snap" *ngIf="!loading">
+    <div class="mi-snap__tile">
+      <div class="mi-snap__label">Written</div>
+      <div class="mi-snap__value">{{ premiumWrittenTotal | currency:'GBP':'symbol':'1.0-0' }}</div>
+    </div>
+    <div class="mi-snap__tile">
+      <div class="mi-snap__label">Target</div>
+      <div class="mi-snap__value">{{ premiumTargetTotal | currency:'GBP':'symbol':'1.0-0' }}</div>
+    </div>
+    <div class="mi-snap__tile" [ngClass]="premiumVariancePct >= 0 ? 'mi-snap__tile--ok' : 'mi-snap__tile--bad'">
+      <div class="mi-snap__label">Variance</div>
+      <div class="mi-snap__value">{{ premiumVariancePct | number:'1.0-1' }}%</div>
+    </div>
+    <div class="mi-snap__tile">
+      <div class="mi-snap__label">Broker GWP</div>
+      <div class="mi-snap__value">{{ leagueGwpTotal | currency:'GBP':'symbol':'1.0-0' }}</div>
+    </div>
+    <div class="mi-snap__tile">
+      <div class="mi-snap__label">Pipeline risks</div>
+      <div class="mi-snap__value">{{ pipelineTotal }}</div>
+    </div>
+    <div class="mi-snap__tile" [ngClass]="avgLossRatio > 65 ? 'mi-snap__tile--bad' : 'mi-snap__tile--ok'">
+      <div class="mi-snap__label">Avg loss ratio</div>
+      <div class="mi-snap__value">{{ avgLossRatio | number:'1.0-1' }}%</div>
+    </div>
+  </div>
+
+  <div class="mi-workbench">
+    <aside class="mi-catalog">
+      <div class="mi-catalog__title">Report catalog</div>
+      <button type="button" class="mi-catalog__item"
+              *ngFor="let c of catalog"
+              [class.active]="activeTab === c.id"
+              (click)="setTab(c.id)">
+        <strong>{{ c.title }}</strong>
+        <span>{{ c.blurb }}</span>
+      </button>
+    </aside>
+
+    <section class="mi-canvas">
+      <apex-loading *ngIf="loading" label="Loading management information…"></apex-loading>
+      <div class="apex-alert apex-alert--danger" *ngIf="error && !loading">{{ error }}</div>
+
+      <!-- Premium -->
+      <div class="apex-card mi-card" *ngIf="!loading && !error && activeTab === 'premium'">
+        <div class="apex-card__header">
+          <h3>Premium vs Target</h3>
+          <span class="mi-muted">{{ fromDate }} → {{ toDate }}</span>
+        </div>
+        <apex-empty-state *ngIf="!premiumVsTarget.length" title="No premium data"
+                           message="No premium vs target figures for this period."></apex-empty-state>
+        <ng-container *ngIf="premiumVsTarget.length">
+          <div class="mi-legend">
+            <span><i class="mi-swatch mi-swatch--written"></i> Written</span>
+            <span><i class="mi-swatch mi-swatch--target"></i> Target</span>
+          </div>
+          <div class="mi-dual-chart mi-dual-chart--tall">
+            <div class="mi-dual-col" *ngFor="let row of premiumVsTarget">
+              <div class="mi-dual-col__bars">
+                <div class="mi-dual-col__bar mi-dual-col__bar--target" [style.height]="targetHeight(row)"></div>
+                <div class="mi-dual-col__bar mi-dual-col__bar--written"
+                     [class.mi-dual-col__bar--under]="row.premiumWritten < row.target"
+                     [style.height]="writtenHeight(row)"></div>
+              </div>
+              <div class="mi-dual-col__label">{{ row.periodLabel }}</div>
+            </div>
+          </div>
+          <div class="apex-table-wrap apex-mt-16">
+            <table class="apex-table apex-table--dense">
+              <thead>
+              <tr>
+                <th>Period</th><th>Written</th><th>Target</th><th>Variance</th><th>Attainment</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr *ngFor="let row of premiumVsTarget">
+                <td>{{ row.periodLabel }}</td>
+                <td>{{ row.premiumWritten | currency:'GBP':'symbol':'1.0-0' }}</td>
+                <td>{{ row.target | currency:'GBP':'symbol':'1.0-0' }}</td>
+                <td [ngClass]="row.variancePercent >= 0 ? 'apex-text-success' : 'apex-text-danger'">
+                  {{ row.variancePercent | number:'1.0-1' }}%
+                </td>
+                <td>
+                  <div class="mi-mini-track">
+                    <span [style.width]="(row.target ? (row.premiumWritten / row.target * 100) : 0) + '%'"
+                          [ngClass]="row.premiumWritten >= row.target ? 'ok' : 'bad'"></span>
+                  </div>
+                </td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+        </ng-container>
+      </div>
+
+      <!-- League -->
+      <div class="apex-card mi-card" *ngIf="!loading && !error && activeTab === 'league'">
+        <div class="apex-card__header"><h3>Broker League Table</h3></div>
+        <apex-empty-state *ngIf="!brokerLeague.length" title="No broker data"
+                           message="No broker performance for this period."></apex-empty-state>
+        <div *ngIf="brokerLeague.length">
+          <div class="mi-rank-row" *ngFor="let row of brokerLeague; let i = index">
+            <div class="mi-rank"
+                 [ngClass]="{'mi-rank--gold': i===0, 'mi-rank--silver': i===1, 'mi-rank--bronze': i===2}">
+              {{ row.rank || (i + 1) }}
+            </div>
+            <div class="mi-rank-row__body">
+              <div class="mi-rank-row__top">
+                <strong>{{ row.brokerName }}</strong>
+                <span>{{ row.grossWrittenPremium | currency:'GBP':'symbol':'1.0-0' }}</span>
+              </div>
+              <div class="mi-rank-row__track"><span [style.width]="leagueBar(row)"></span></div>
+              <div class="mi-rank-row__meta">
+                {{ row.submissionCount }} submissions · {{ row.boundCount }} bound · hit ratio {{ row.hitRatio | number:'1.0-1' }}%
+              </div>
+            </div>
+          </div>
+          <div class="apex-table-wrap apex-mt-16">
+            <table class="apex-table apex-table--dense">
+              <thead>
+              <tr><th>Rank</th><th>Broker</th><th>GWP</th><th>Subs</th><th>Bound</th><th>Hit %</th></tr>
+              </thead>
+              <tbody>
+              <tr *ngFor="let row of brokerLeague">
+                <td>{{ row.rank }}</td>
+                <td>{{ row.brokerName }}</td>
+                <td>{{ row.grossWrittenPremium | currency:'GBP':'symbol':'1.0-0' }}</td>
+                <td>{{ row.submissionCount }}</td>
+                <td>{{ row.boundCount }}</td>
+                <td>{{ row.hitRatio | number:'1.0-1' }}%</td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pipeline aging heatmap -->
+      <div class="apex-card mi-card" *ngIf="!loading && !error && activeTab === 'pipeline'">
+        <div class="apex-card__header">
+          <h3>Pipeline aging heatmap</h3>
+          <span class="mi-muted">{{ pipelineTotal }} risks</span>
+        </div>
+        <apex-empty-state *ngIf="!pipeline.length" title="No pipeline data"
+                           message="No submissions currently in the pipeline."></apex-empty-state>
+        <div class="mi-heat-wrap" *ngIf="pipeline.length">
+          <table class="mi-heat">
+            <thead>
+            <tr>
+              <th>Status \ Age</th>
+              <th *ngFor="let b of agingBuckets">{{ b }}</th>
+              <th>Total</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr *ngFor="let s of agingStatuses">
+              <th>{{ s }}</th>
+              <td *ngFor="let b of agingBuckets" [ngClass]="heatClass(agingCount(s, b))">
+                {{ agingCount(s, b) || '·' }}
+              </td>
+              <td class="mi-heat__total">{{ rowTotal(s) }}</td>
+            </tr>
+            </tbody>
+          </table>
+          <div class="mi-heat-legend">
+            <span>Low</span>
+            <i class="mi-heat--1"></i><i class="mi-heat--2"></i><i class="mi-heat--3"></i><i class="mi-heat--4"></i>
+            <span>High</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Loss ratio -->
+      <div class="apex-card mi-card" *ngIf="!loading && !error && activeTab === 'lossRatio'">
+        <div class="apex-card__header"><h3>Loss ratio by line of business</h3></div>
+        <apex-empty-state *ngIf="!lossRatioRows.length" title="No loss ratio data"
+                           message="No claims experience for this period."></apex-empty-state>
+        <div class="mi-lr-grid" *ngIf="lossRatioRows.length">
+          <div class="mi-lr-card" *ngFor="let row of lossRatioRows"
+               [ngClass]="row.lossRatioPercent > 65 ? 'mi-lr-card--bad' : 'mi-lr-card--ok'">
+            <svg class="mi-lr-gauge" viewBox="0 0 100 100">
+              <circle cx="50" cy="50" r="36" class="mi-gauge__track"></circle>
+              <circle cx="50" cy="50" r="36" class="mi-gauge__value"
+                      [attr.stroke-dasharray]="lrGauge(row)"
+                      transform="rotate(-90 50 50)"></circle>
+              <text x="50" y="52" text-anchor="middle" class="mi-gauge__pct">{{ row.lossRatioPercent | number:'1.0-0' }}%</text>
+            </svg>
+            <div>
+              <strong>{{ row.lineOfBusiness }}</strong>
+              <div class="mi-muted">Earned {{ row.earnedPremium | currency:'GBP':'symbol':'1.0-0' }}</div>
+              <div class="mi-muted">Incurred {{ row.incurredLosses | currency:'GBP':'symbol':'1.0-0' }}</div>
+            </div>
+          </div>
+        </div>
+        <div class="apex-table-wrap apex-mt-16" *ngIf="lossRatioRows.length">
+          <table class="apex-table apex-table--dense">
+            <thead>
+            <tr><th>LOB</th><th>Earned</th><th>Incurred</th><th>Loss ratio</th></tr>
+            </thead>
+            <tbody>
+            <tr *ngFor="let row of lossRatioRows">
+              <td>{{ row.lineOfBusiness }}</td>
+              <td>{{ row.earnedPremium | currency:'GBP':'symbol':'1.0-0' }}</td>
+              <td>{{ row.incurredLosses | currency:'GBP':'symbol':'1.0-0' }}</td>
+              <td [ngClass]="row.lossRatioPercent > 65 ? 'apex-text-danger' : 'apex-text-success'">
+                {{ row.lossRatioPercent | number:'1.0-1' }}%
+              </td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>

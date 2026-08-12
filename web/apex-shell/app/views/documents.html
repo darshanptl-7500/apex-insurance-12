@@ -1,0 +1,143 @@
+<div class="apex-page-header">
+    <div class="apex-page-header__title">
+        <h1>Documents</h1>
+        <div class="apex-page-header__subtitle">
+            Upload, classify, preview, and spawn modelling / second-sight / front-sheet tasks.
+        </div>
+    </div>
+</div>
+
+<div class="apex-alert apex-alert--info" ng-if="vm.hasContext()">
+    Filtered to
+    <span ng-if="vm.context.submissionId">submission #{{vm.context.submissionId}}</span>
+    <span ng-if="vm.context.policyId">policy #{{vm.context.policyId}}</span>
+    <span ng-if="vm.context.claimId">claim #{{vm.context.claimId}}</span>.
+    <a href="" ng-click="vm.clearContext()">Clear filter</a>
+</div>
+
+<div class="apex-grid-2">
+    <div class="apex-card">
+        <div class="apex-card__header"><h3>Upload a document</h3></div>
+        <div class="apex-alert apex-alert--danger" ng-if="vm.uploadError">{{vm.uploadError}}</div>
+        <div class="apex-alert apex-alert--success" ng-if="vm.uploadSuccess">{{vm.uploadSuccess}}</div>
+        <form ng-submit="vm.submitUpload()">
+            <div class="apex-form-grid">
+                <div class="apex-form-row">
+                    <label>File</label>
+                    <input type="file" onchange="angular.element(this).scope().vm.onFileSelected(this); angular.element(this).scope().$apply();">
+                </div>
+                <div class="apex-form-row">
+                    <label>Document type</label>
+                    <select ng-model="vm.upload.documentType" ng-options="o.value as o.label for o in vm.docTypeOptions"></select>
+                </div>
+                <div class="apex-form-row">
+                    <label>Author</label>
+                    <input type="text" ng-model="vm.upload.author">
+                </div>
+                <div class="apex-form-row">
+                    <label>Endorsement No</label>
+                    <input type="text" ng-model="vm.upload.endorsementNo">
+                </div>
+                <div class="apex-form-row">
+                    <label>Display name</label>
+                    <input type="text" ng-model="vm.upload.displayName" placeholder="Friendly name">
+                </div>
+                <div class="apex-form-row">
+                    <label>Reference</label>
+                    <input type="text" ng-model="vm.upload.externalReference">
+                </div>
+            </div>
+            <div class="apex-form-row">
+                <label>Description / notes</label>
+                <input type="text" ng-model="vm.upload.notes" placeholder="Short note about this document">
+            </div>
+            <div class="apex-form-row">
+                <label>Spawn workflow tasks</label>
+                <div class="apex-flex" style="flex-wrap:wrap;gap:10px">
+                    <label ng-repeat="t in vm.spawnOptions" style="font-size:12px">
+                        <input type="checkbox" ng-model="vm.upload.spawn[t]"> {{t}}
+                    </label>
+                </div>
+            </div>
+            <div class="apex-btn-row">
+                <button type="submit" class="apex-btn apex-btn--primary" ng-disabled="vm.uploadBusy">
+                    {{vm.uploadBusy ? 'Uploading…' : 'Upload'}}
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="apex-card" ng-if="vm.previewDoc">
+        <div class="apex-card__header">
+            <h3>Preview — {{vm.previewDoc.fileName}}</h3>
+            <button type="button" class="apex-btn apex-btn--sm apex-btn--ghost" ng-click="vm.clearPreview()">Close</button>
+        </div>
+        <iframe ng-if="vm.previewIsPdf" ng-src="{{vm.previewTrustedUrl}}" style="width:100%;height:420px;border:1px solid #ccc" title="PDF preview"></iframe>
+        <p ng-if="!vm.previewIsPdf" class="apex-text-muted">
+            In-app preview is available for PDFs. Use Download for this file type.
+        </p>
+        <button type="button" class="apex-btn apex-btn--sm" ng-click="vm.download(vm.previewDoc)">Download</button>
+    </div>
+</div>
+
+<div class="apex-card">
+    <div class="apex-card__header"><h3>Document library</h3></div>
+
+    <div class="apex-loading" ng-if="vm.loading">
+        <span class="apex-spinner"></span> Loading documents…
+    </div>
+
+    <div class="apex-alert apex-alert--danger" ng-if="vm.error && !vm.loading">{{vm.error}}</div>
+    <div class="apex-alert apex-alert--danger" ng-if="vm.rowError">{{vm.rowError}}</div>
+
+    <apex-empty-state ng-if="!vm.loading && !vm.error && vm.documents.length === 0"
+                       title="'No documents found'"
+                       message="'Upload a file above to add it to the library.'"></apex-empty-state>
+
+    <div class="apex-pipeline-layout" ng-if="!vm.loading && vm.documents.length > 0">
+        <aside class="apex-pipeline-rail" style="width:160px;flex-basis:160px">
+            <div class="apex-pipeline-rail__title">Folders</div>
+            <button type="button" class="apex-pipeline-rail__item"
+                    ng-class="{active: !vm.folderFilter}"
+                    ng-click="vm.folderFilter = null">All
+                <span class="apex-pipeline-rail__count">{{vm.documents.length}}</span>
+            </button>
+            <button type="button" class="apex-pipeline-rail__item"
+                    ng-repeat="f in vm.folders"
+                    ng-class="{active: vm.folderFilter === f}"
+                    ng-click="vm.folderFilter = f">{{f}}
+                <span class="apex-pipeline-rail__count">{{vm.countInFolder(f)}}</span>
+            </button>
+        </aside>
+        <div class="apex-pipeline-main">
+            <div class="apex-table-wrap">
+                <table class="apex-table">
+                    <thead>
+                    <tr>
+                        <th>File</th>
+                        <th>Type</th>
+                        <th>Author</th>
+                        <th>Uploaded</th>
+                        <th>Version</th>
+                        <th></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr ng-repeat="d in vm.filteredDocs()">
+                        <td class="apex-table__link">{{d.displayName || d.fileName}}</td>
+                        <td>{{d.documentType}}</td>
+                        <td>{{d.author || '—'}}</td>
+                        <td>{{d.uploadedDate | date:'dd MMM yyyy HH:mm'}}</td>
+                        <td>v{{d.versionNumber}}</td>
+                        <td class="apex-btn-row">
+                            <button type="button" class="apex-btn apex-btn--sm apex-btn--ghost" ng-click="vm.preview(d)">Preview</button>
+                            <button type="button" class="apex-btn apex-btn--sm apex-btn--ghost" ng-click="vm.download(d)">Download</button>
+                            <a ng-if="d.submissionId" class="apex-btn apex-btn--sm apex-btn--ghost" ng-href="/ng8/case-hub/{{d.submissionId}}">UW File</a>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

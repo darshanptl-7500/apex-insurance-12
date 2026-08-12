@@ -1,0 +1,202 @@
+<div class="apex-breadcrumb"><a href="#!/submissions">Submissions</a> / {{vm.submission.submissionNumber || vm.id}}</div>
+
+<div class="apex-loading" ng-if="vm.loading">
+    <span class="apex-spinner"></span> Loading submission…
+</div>
+
+<div class="apex-alert apex-alert--danger" ng-if="vm.error && !vm.loading">{{vm.error}}</div>
+
+<div ng-if="!vm.loading && vm.submission">
+
+    <div class="apex-page-header">
+        <div class="apex-page-header__title">
+            <h1>{{vm.submission.submissionNumber}}</h1>
+            <div class="apex-page-header__subtitle">
+                {{vm.enums.lineOfBusiness[vm.submission.lineOfBusiness] || vm.submission.lineOfBusiness}} &middot;
+                {{vm.submission.insuredName || '—'}} &middot;
+                Broker: {{vm.submission.brokerName || '—'}}
+            </div>
+        </div>
+        <div class="apex-page-header__actions">
+            <apex-status-badge kind="'submission'" value="vm.submission.status"></apex-status-badge>
+            <a class="apex-btn apex-btn--sm" ng-href="{{vm.caseHubUrl()}}">Open Underwriter's File</a>
+        </div>
+    </div>
+
+    <div class="apex-alert apex-alert--success" ng-if="vm.actionSuccess">{{vm.actionSuccess}}</div>
+    <div class="apex-alert apex-alert--danger" ng-if="vm.actionError">{{vm.actionError}}</div>
+
+    <div class="apex-pipeline">
+        <div class="apex-pipeline__step" ng-class="vm.pipelineStepClass(step)" ng-repeat="step in vm.pipelineSteps">
+            {{step}}
+        </div>
+    </div>
+
+    <div class="apex-grid-2">
+        <div>
+            <div class="apex-tabs">
+                <div class="apex-tabs__tab" ng-class="{active: vm.activeTab === 'quotes'}" ng-click="vm.setTab('quotes')">Quotes</div>
+                <div class="apex-tabs__tab" ng-class="{active: vm.activeTab === 'risk'}" ng-click="vm.setTab('risk')">Risk Answers</div>
+                <div class="apex-tabs__tab" ng-class="{active: vm.activeTab === 'documents'}" ng-click="vm.setTab('documents')">Documents</div>
+                <div class="apex-tabs__tab" ng-class="{active: vm.activeTab === 'notes'}" ng-click="vm.setTab('notes')">Notes</div>
+            </div>
+
+            <div ng-if="vm.activeTab === 'quotes'" ng-controller="QuotesController as quotesVm">
+                <div class="apex-card">
+                    <div class="apex-card__header">
+                        <h3>Quotes</h3>
+                        <button type="button" class="apex-btn apex-btn--sm"
+                                ng-click="quotesVm.toggleForm()"
+                                ng-if="vm.submission.status !== 'Bound'">
+                            {{quotesVm.showForm ? 'Cancel' : '+ Create quote'}}
+                        </button>
+                    </div>
+
+                    <div class="apex-alert apex-alert--danger" ng-if="quotesVm.error">{{quotesVm.error}}</div>
+                    <div class="apex-loading" ng-if="quotesVm.loadingQuotes">
+                        <span class="apex-spinner"></span> Loading quotes…
+                    </div>
+
+                    <form ng-if="quotesVm.showForm" ng-submit="quotesVm.createQuote()" class="apex-mt-16">
+                        <div class="apex-form-grid">
+                            <div class="apex-form-row">
+                                <label>Sum insured (£)</label>
+                                <input type="number" ng-model="quotesVm.draft.sumInsured" min="1" required>
+                            </div>
+                            <div class="apex-form-row">
+                                <label>Limit of indemnity (£)</label>
+                                <input type="number" ng-model="quotesVm.draft.limitOfIndemnity" min="1" required>
+                            </div>
+                            <div class="apex-form-row">
+                                <label>Deductible (£)</label>
+                                <input type="number" ng-model="quotesVm.draft.deductible" min="0">
+                            </div>
+                            <div class="apex-form-row">
+                                <label>Commission %</label>
+                                <input type="number" ng-model="quotesVm.draft.commissionPercent" min="0" max="100" step="0.1">
+                            </div>
+                        </div>
+                        <p class="apex-text-muted">Premium is calculated by the rating engine from rate tables, trade loading and deductible credit.</p>
+                        <div class="apex-btn-row">
+                            <button type="submit" class="apex-btn apex-btn--primary" ng-disabled="quotesVm.busy">
+                                {{quotesVm.busy ? 'Rating…' : 'Rate &amp; save quote'}}
+                            </button>
+                        </div>
+                    </form>
+
+                    <apex-empty-state ng-if="!quotesVm.loadingQuotes && quotesVm.quotes.length === 0 && !quotesVm.showForm"
+                                       title="'No quotes yet'"
+                                       message="'Create a quote to rate this submission.'"></apex-empty-state>
+
+                    <table class="apex-table apex-mt-16" ng-if="quotesVm.quotes.length > 0">
+                        <thead>
+                        <tr>
+                            <th>Quote</th><th>Ver.</th><th>Sum insured</th><th>Limit</th><th>Deductible</th>
+                            <th>Gross premium</th><th>Referral</th><th></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr ng-repeat="q in quotesVm.quotes | orderBy: '-versionNumber'">
+                            <td class="apex-mono">{{q.quoteNumber}}</td>
+                            <td>v{{q.versionNumber}}</td>
+                            <td>{{q.sumInsured | currency:'£':0}}</td>
+                            <td>{{q.limitOfIndemnity | currency:'£':0}}</td>
+                            <td>{{q.deductible | currency:'£':0}}</td>
+                            <td><strong>{{q.grossPremium | currency:'£':0}}</strong></td>
+                            <td>
+                                <span class="apex-badge apex-badge--warn" ng-if="q.isReferralRequired"
+                                      title="{{q.referralReason}}">{{q.referralDecision || 'Referral'}}</span>
+                                <span class="apex-badge apex-badge--neutral" ng-if="!q.isReferralRequired">Clear</span>
+                            </td>
+                            <td class="apex-btn-row">
+                                <span class="apex-badge apex-badge--success" ng-if="q.isSelected">Selected</span>
+                                <button type="button" class="apex-btn apex-btn--ghost apex-btn--sm"
+                                        ng-if="!q.isSelected && vm.submission.status !== 'Bound'"
+                                        ng-disabled="quotesVm.busy"
+                                        ng-click="quotesVm.selectQuote(q)">Select</button>
+                                <button type="button" class="apex-btn apex-btn--primary apex-btn--sm"
+                                        ng-if="vm.submission.status !== 'Bound' && quotesVm.canBind(q)"
+                                        ng-disabled="quotesVm.busy"
+                                        ng-click="quotesVm.bindQuote(q)">Bind</button>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="apex-card" ng-if="vm.activeTab === 'risk'">
+                <div class="apex-card__header">
+                    <h3>Proposal risk answers</h3>
+                    <a class="apex-btn apex-btn--sm" ng-href="{{vm.caseHubUrl()}}">Edit in Underwriter's File</a>
+                </div>
+                <apex-empty-state ng-if="vm.submission.riskAnswers.length === 0"
+                                   title="'No risk answers captured'"
+                                   message="'Capture and edit risk answers in Underwriter\'s File.'"></apex-empty-state>
+                <table class="apex-table" ng-if="vm.submission.riskAnswers.length > 0">
+                    <thead><tr><th>Code</th><th>Question</th><th>Answer</th></tr></thead>
+                    <tbody>
+                    <tr ng-repeat="ra in vm.submission.riskAnswers">
+                        <td class="apex-mono">{{ra.questionCode}}</td>
+                        <td>{{ra.questionText || '—'}}</td>
+                        <td>{{ra.answerText || ra.answerNumeric || '—'}}</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="apex-card" ng-if="vm.activeTab === 'documents'">
+                <div class="apex-card__header">
+                    <h3>Documents</h3>
+                    <a class="apex-btn apex-btn--sm" ng-href="#!/documents?submissionId={{vm.id}}">Manage in Documents</a>
+                </div>
+                <p class="apex-text-muted">Open Documents filtered to this submission to upload proposal forms and schedules.</p>
+            </div>
+
+            <div class="apex-card" ng-if="vm.activeTab === 'notes'">
+                <div class="apex-card__header"><h3>Intake notes</h3></div>
+                <p ng-if="vm.submission.notes">{{vm.submission.notes}}</p>
+                <p class="apex-text-muted" ng-if="!vm.submission.notes">No notes recorded at intake.</p>
+            </div>
+        </div>
+
+        <div>
+            <div class="apex-card">
+                <div class="apex-card__header"><h3>Submission summary</h3></div>
+                <dl class="apex-kv">
+                    <dt>Insured</dt><dd>{{vm.submission.insuredName || '—'}}</dd>
+                    <dt>Broker</dt><dd>{{vm.submission.brokerName || '—'}}</dd>
+                    <dt>Line of business</dt><dd>{{vm.enums.lineOfBusiness[vm.submission.lineOfBusiness] || vm.submission.lineOfBusiness}}</dd>
+                    <dt>Target premium</dt><dd>{{vm.submission.targetPremium | currency:'£':0}}</dd>
+                    <dt>Effective</dt><dd>{{vm.submission.requestedEffectiveDate | date:'dd MMM yyyy'}}</dd>
+                    <dt>Due</dt><dd>{{vm.submission.dueDate ? (vm.submission.dueDate | date:'dd MMM yyyy') : '—'}}</dd>
+                    <dt>Received</dt><dd>{{vm.submission.receivedDate | date:'dd MMM yyyy'}}</dd>
+                    <dt>Underwriter</dt><dd>{{vm.submission.underwriterName || 'Unassigned'}}</dd>
+                </dl>
+            </div>
+
+            <div class="apex-card" ng-if="vm.canAssign()">
+                <div class="apex-card__header"><h3>Assign &amp; due date</h3></div>
+                <div class="apex-form-row">
+                    <label>Underwriter</label>
+                    <select ng-model="vm.assignDraft.underwriterId"
+                            ng-options="u.id as (u.fullName || u.username) for u in vm.underwriters">
+                        <option value="">— Select —</option>
+                    </select>
+                </div>
+                <div class="apex-btn-row">
+                    <button type="button" class="apex-btn apex-btn--sm apex-btn--primary"
+                            ng-disabled="vm.busy" ng-click="vm.assignUnderwriter()">Assign</button>
+                </div>
+                <div class="apex-form-row apex-mt-16">
+                    <label>Due date</label>
+                    <input type="date" ng-model="vm.dueDraft.dueDate">
+                </div>
+                <div class="apex-btn-row">
+                    <button type="button" class="apex-btn apex-btn--sm"
+                            ng-disabled="vm.busy" ng-click="vm.saveDueDate()">Save due date</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

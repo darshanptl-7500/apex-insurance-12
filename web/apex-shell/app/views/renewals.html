@@ -1,0 +1,65 @@
+<div class="apex-page-header">
+    <div class="apex-page-header__title">
+        <h1>Renewal diary</h1>
+        <div class="apex-page-header__subtitle">Policies expiring within the horizon — create a renewal submission to start re-underwriting.</div>
+    </div>
+    <div class="apex-page-header__actions">
+        <div class="apex-form-row" style="margin:0">
+            <label>Days ahead</label>
+            <select ng-model="vm.daysAhead" ng-change="vm.reload()"
+                    ng-options="d as (d + ' days') for d in [30,60,90,180]"></select>
+        </div>
+    </div>
+</div>
+
+<div class="apex-alert apex-alert--danger" ng-if="vm.actionError">{{vm.actionError}}</div>
+<div class="apex-alert apex-alert--danger" ng-if="vm.error && !vm.loading">{{vm.error}}</div>
+
+<div class="apex-card">
+    <div class="apex-loading" ng-if="vm.loading">
+        <span class="apex-spinner"></span> Loading renewal diary…
+    </div>
+
+    <apex-empty-state ng-if="!vm.loading && !vm.error && vm.items.length === 0"
+                       title="'Nothing due in this window'"
+                       message="'Widen the days-ahead filter or check back as policies approach expiry.'"></apex-empty-state>
+
+    <div class="apex-table-wrap" ng-if="!vm.loading && vm.items.length > 0">
+        <table class="apex-table">
+            <thead>
+            <tr>
+                <th>Policy</th>
+                <th>Insured</th>
+                <th>Broker</th>
+                <th>Expiry</th>
+                <th>Days left</th>
+                <th>Expiring premium</th>
+                <th>Renewal</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr ng-repeat="r in vm.items">
+                <td><a class="apex-table__link" ng-href="#!/policies/{{r.policyId}}">{{r.policyNumber}}</a></td>
+                <td>{{r.insuredName || '—'}}</td>
+                <td>{{r.brokerName || '—'}}</td>
+                <td>{{r.expiryDate | date:'dd MMM yyyy'}}</td>
+                <td>
+                    <span ng-class="{'apex-badge apex-badge--warn': r.daysToExpiry <= 30}">{{r.daysToExpiry}}</span>
+                </td>
+                <td>{{r.expiringPremium | currency:'£':0}}</td>
+                <td>
+                    <span class="apex-badge apex-badge--success" ng-if="r.renewalSubmissionCreated">Created</span>
+                    <span class="apex-badge apex-badge--neutral" ng-if="!r.renewalSubmissionCreated">Not started</span>
+                </td>
+                <td>
+                    <button type="button" class="apex-btn apex-btn--sm apex-btn--primary"
+                            ng-if="!r.renewalSubmissionCreated"
+                            ng-disabled="vm.busyId === r.policyId"
+                            ng-click="vm.createRenewal(r)">Create renewal</button>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

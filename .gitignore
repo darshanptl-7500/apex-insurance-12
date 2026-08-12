@@ -1,0 +1,44 @@
+## .NET
+bin/
+obj/
+packages/
+*.useragent
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Bb]uild/
+bld/
+[Ll]og/
+*.nupkg
+project.lock.json
+artifacts/
+
+## Web / Node
+node_modules/
+web/apex-ng8/dist/
+web/apex-ng8/.angular/
+npm-debug.log*
+yarn-error.log*
+
+## Documents / uploads
+**/App_Data/Documents/**
+!**/App_Data/Documents/.gitkeep
+
+## IDE / OS
+.vs/
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+
+## Secrets
+*.pfx
+appsettings.*.local.json
+.env
+.env.*

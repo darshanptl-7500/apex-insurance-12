@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>ApexInsurance.Api</RootNamespace>
+    <AssemblyName>ApexInsurance.Api</AssemblyName>
+    <!-- UW equivalent: Apex.UW.Web — hosts API; hybrid UI served via web/serve-hybrid.js -->
+    <Product>ApexInsurance.Web</Product>
+    <Description>Apex Insurance Web host (UW-style workbench API)</Description>
+    <LangVersion>latest</LangVersion>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="10.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.0" />
+    <PackageReference Include="RabbitMQ.Client" Version="6.8.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ApexInsurance.Domain\ApexInsurance.Domain.csproj" />
+    <ProjectReference Include="..\ApexInsurance.Data\ApexInsurance.Data.csproj" />
+    <ProjectReference Include="..\ApexInsurance.Services\ApexInsurance.Services.csproj" />
+    <ProjectReference Include="..\ApexInsurance.Services.Contracts\ApexInsurance.Services.Contracts.csproj" />
+    <ProjectReference Include="..\ApexInsurance.Dto\ApexInsurance.Dto.csproj" />
+    <ProjectReference Include="..\ApexInsurance.UI\ApexInsurance.UI.csproj" />
+    <ProjectReference Include="..\ApexInsurance.Security\ApexInsurance.Security.csproj" />
+    <ProjectReference Include="..\ApexInsurance.Data.OpenBox\ApexInsurance.Data.OpenBox.csproj" />
+    <ProjectReference Include="..\ApexInsurance.Shared\ApexInsurance.Shared.csproj" />
+  </ItemGroup>
+
+</Project>

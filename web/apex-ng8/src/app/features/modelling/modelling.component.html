@@ -1,0 +1,235 @@
+<div class="apex-page-header">
+  <div class="apex-page-header__title">
+    <h1>Pricing</h1>
+    <div class="apex-page-header__subtitle">
+      UW Pricing portal · risk modelling entry · technical rate view
+    </div>
+  </div>
+  <div class="apex-page-header__actions">
+    <button type="button" class="apex-btn apex-btn--danger apex-btn--sm" (click)="openPricing()">
+      Open Pricing portal ↗
+    </button>
+    <button type="button" class="apex-btn apex-btn--ghost apex-btn--sm" (click)="toggleEmbed()">
+      {{ embedOpen ? 'Hide embed' : 'Embed portal' }}
+    </button>
+    <button type="button" class="apex-btn apex-btn--ghost apex-btn--sm" [disabled]="loading" (click)="load()">
+      {{ loading ? 'Refreshing…' : 'Refresh' }}
+    </button>
+  </div>
+</div>
+
+<!-- External Pricing (UI-SPEC: deep-link / embed) -->
+<div class="pricing-portal-card">
+  <div class="pricing-portal-card__copy">
+    <strong>External Pricing</strong>
+    <p>
+      UW Pricing is hosted outside the workbench. Launch the portal for full rating /
+      catastrophe modelling, or embed it below for side-by-side review with the UW File.
+    </p>
+    <code class="pricing-portal-card__url">{{ pricingUrl }}</code>
+  </div>
+  <div class="pricing-portal-card__actions">
+    <button type="button" class="apex-btn apex-btn--primary apex-btn--sm" (click)="openPricing()">Launch</button>
+  </div>
+</div>
+
+<div class="pricing-embed" *ngIf="embedOpen">
+  <div class="pricing-embed__chrome">
+    <span>Pricing portal (demo embed)</span>
+    <a [href]="pricingUrl" target="_blank" rel="noopener">Open in new tab</a>
+  </div>
+  <iframe class="pricing-embed__frame" [src]="embedUrl" title="UW Pricing portal"></iframe>
+  <p class="pricing-embed__note">
+    Demo host may block iframe embedding — use <em>Open Pricing portal</em> if the frame stays blank.
+  </p>
+</div>
+
+<!-- Risk-scoped modelling (UW File → Model) -->
+<div class="apex-card pricing-risk" *ngIf="submissionId">
+  <div class="apex-card__header">
+    <h3>Risk modelling — {{ accountName || ('Submission #' + submissionId) }}</h3>
+    <div class="pricing-risk__actions">
+      <a class="apex-btn apex-btn--sm" [href]="uwFileUrl">Underwriter's File</a>
+      <button type="button" class="apex-btn apex-btn--danger apex-btn--sm" (click)="openPricing()">
+        Model in Pricing ↗
+      </button>
+    </div>
+  </div>
+
+  <apex-loading *ngIf="riskLoading" label="Loading risk pricing context…"></apex-loading>
+  <div class="apex-alert apex-alert--danger" *ngIf="riskError && !riskLoading">{{ riskError }}</div>
+
+  <ng-container *ngIf="file && !riskLoading">
+    <div class="pricing-risk__meta">
+      <div class="apex-kv"><dt>UW Reference</dt><dd class="apex-mono">{{ reference || '—' }}</dd></div>
+      <div class="apex-kv"><dt>Status</dt><dd>{{ file.status || '—' }}</dd></div>
+      <div class="apex-kv"><dt>LOB</dt><dd>{{ file.lineOfBusiness || '—' }}</dd></div>
+      <div class="apex-kv"><dt>Broker</dt><dd>{{ file.brokerName || '—' }}</dd></div>
+      <div class="apex-kv"><dt>Inception</dt><dd>{{ file.inception || file.requestedEffectiveDate || '—' }}</dd></div>
+      <div class="apex-kv"><dt>YOA</dt><dd>{{ file.yoa || '—' }}</dd></div>
+    </div>
+
+    <h4 class="pricing-section-title">Technical pricing (section grid)</h4>
+    <p class="apex-text-muted pricing-hint">
+      Aligns to UW technical fields: Prem/Rate, Modelled LR, Technical Index, Rate Adequacy, Facility / LBS / LIC.
+    </p>
+
+    <apex-empty-state *ngIf="!sections.length"
+                       title="No sections"
+                       message="Open the Underwriter's File to add sections before modelling."></apex-empty-state>
+
+    <div class="apex-table-wrap" *ngIf="sections.length">
+      <table class="apex-table apex-table--dense">
+        <thead>
+        <tr>
+          <th>Section / UW Ref</th>
+          <th>Limit</th>
+          <th>Ded / XS</th>
+          <th>Prem / Rate</th>
+          <th>Gross</th>
+          <th>Net</th>
+          <th>Technical Index</th>
+          <th>Modelled LR</th>
+          <th>Rate Adequacy</th>
+          <th>LTLR</th>
+          <th>Flags</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr *ngFor="let s of sections">
+          <td class="apex-mono">{{ s.uwReference || s.sectionName || s.id }}</td>
+          <td>{{ money(s.limit || s.limitOfIndemnity) }}</td>
+          <td>{{ money(s.dedXs || s.deductible) }}</td>
+          <td>{{ s.premRate != null ? s.premRate : '—' }}</td>
+          <td>{{ money(s.grossPremium || s.gross) }}</td>
+          <td>{{ money(s.netPremium || s.net) }}</td>
+          <td>{{ s.technicalIndex != null ? s.technicalIndex : '—' }}</td>
+          <td>{{ pct(s.modelledLr) }}</td>
+          <td>{{ pct(s.rateAdequacy) }}</td>
+          <td>{{ pct(s.longTermLossRatio) }}</td>
+          <td>
+            <span class="apex-chip" *ngIf="s.facilityFlag">FAC</span>
+            <span class="apex-chip" *ngIf="s.lbsFlag">LBS</span>
+            <span class="apex-chip" *ngIf="s.licFlag">LIC</span>
+            <span *ngIf="!s.facilityFlag && !s.lbsFlag && !s.licFlag">—</span>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </ng-container>
+</div>
+
+<div class="apex-alert apex-alert--info" *ngIf="!submissionId">
+  Open <strong>Model</strong> from an Underwriter's File to load risk-scoped technical pricing here,
+  or launch the external Pricing portal above.
+</div>
+
+<!-- Modelling task queue -->
+<div class="apex-card">
+  <div class="apex-card__header">
+    <h3>Modelling / Second Sight queue</h3>
+    <button type="button" class="apex-btn apex-btn--ghost apex-btn--sm" (click)="loadTasks()" [disabled]="tasksLoading">
+      {{ tasksLoading ? 'Loading…' : 'Refresh' }}
+    </button>
+  </div>
+  <apex-empty-state *ngIf="!tasksLoading && tasks.length === 0"
+                     title="No open modelling tasks"
+                     message="Upload docs with Modelling / Second Sight spawn, or create tasks from the UW File."></apex-empty-state>
+  <div class="apex-table-wrap" *ngIf="tasks.length">
+    <table class="apex-table apex-table--dense">
+      <thead>
+      <tr>
+        <th>Task</th><th>Type</th><th>Risk</th><th>Account</th><th>Assigned</th><th>Due</th><th></th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr *ngFor="let t of tasks">
+        <td>{{ t.title }}</td>
+        <td>{{ t.taskType || '—' }}</td>
+        <td class="apex-mono">{{ t.submissionNumber || t.submissionId || '—' }}</td>
+        <td>{{ t.insuredName || '—' }}</td>
+        <td>{{ t.assignedToName || '—' }}</td>
+        <td>{{ t.dueDate ? (t.dueDate | date:'dd MMM yyyy') : '—' }}</td>
+        <td>
+          <a class="apex-btn apex-btn--sm apex-btn--ghost" [href]="taskUrl(t)">Open task</a>
+          <a *ngIf="t.submissionId" class="apex-btn apex-btn--sm apex-btn--ghost"
+             [href]="'/ng8/modelling?submissionId=' + t.submissionId">Price</a>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Secondary: portfolio exposure (previous modelling view) -->
+<div class="apex-card pricing-portfolio">
+  <button type="button" class="pricing-portfolio__toggle" (click)="togglePortfolio()">
+    <span>Portfolio exposure (supporting view)</span>
+    <span>{{ showPortfolio ? '▾' : '▸' }}</span>
+  </button>
+
+  <div *ngIf="showPortfolio">
+    <apex-loading *ngIf="loading" label="Loading exposure data…"></apex-loading>
+    <div class="apex-alert apex-alert--danger" *ngIf="error && !loading">{{ error }}</div>
+
+    <ng-container *ngIf="!loading && !error">
+      <div class="apex-grid-4" *ngIf="concentration">
+        <div class="apex-kpi">
+          <div class="apex-kpi__label">Total sum insured</div>
+          <div class="apex-kpi__value">£{{ concentration.totalSumInsured | number:'1.0-0' }}</div>
+        </div>
+        <div class="apex-kpi">
+          <div class="apex-kpi__label">Total gross premium</div>
+          <div class="apex-kpi__value">£{{ concentration.totalGrossPremium | number:'1.0-0' }}</div>
+        </div>
+        <div class="apex-kpi">
+          <div class="apex-kpi__label">Largest single risk</div>
+          <div class="apex-kpi__value">£{{ concentration.largestSingleRiskSumInsured | number:'1.0-0' }}</div>
+          <div class="apex-kpi__delta">{{ concentration.largestRiskPolicyNumber || '—' }}</div>
+        </div>
+        <div class="apex-kpi">
+          <div class="apex-kpi__label">Top LOB share</div>
+          <div class="apex-kpi__value">{{ concentration.topLobSharePercent | number:'1.0-1' }}%</div>
+          <div class="apex-kpi__delta">{{ concentration.topLob || '—' }}</div>
+        </div>
+      </div>
+
+      <div class="apex-tabs">
+        <div class="apex-tabs__tab" *ngFor="let g of groupOptions"
+             [class.active]="activeTab === g.value" (click)="setTab(g.value)">
+          {{ g.label }}
+        </div>
+      </div>
+
+      <apex-empty-state *ngIf="activeRows.length === 0" title="No exposure data"
+                         message="No bound policies contribute to this view yet."></apex-empty-state>
+
+      <ng-container *ngIf="activeRows.length > 0">
+        <div class="apex-bar-chart apex-mb-16">
+          <div class="apex-bar-row" *ngFor="let r of activeRows">
+            <div class="apex-bar-row__label">{{ r.dimension }}</div>
+            <div class="apex-bar-row__track">
+              <div class="apex-bar-row__fill" [style.width]="barWidth(r)"></div>
+            </div>
+            <div class="apex-bar-row__value">£{{ r.sumInsured | number:'1.0-0' }}</div>
+          </div>
+        </div>
+        <div class="apex-table-wrap">
+          <table class="apex-table">
+            <thead><tr><th>Dimension</th><th>Sum insured</th><th>Gross premium</th><th>Policies</th><th>Share of SI</th></tr></thead>
+            <tbody>
+            <tr *ngFor="let r of activeRows">
+              <td>{{ r.dimension }}</td>
+              <td>£{{ r.sumInsured | number:'1.0-0' }}</td>
+              <td>£{{ r.grossPremium | number:'1.0-0' }}</td>
+              <td>{{ r.policyCount }}</td>
+              <td>{{ concentrationPct(r) | number:'1.0-1' }}%</td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+      </ng-container>
+    </ng-container>
+  </div>
+</div>

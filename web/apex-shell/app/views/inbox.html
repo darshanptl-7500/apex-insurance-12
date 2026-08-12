@@ -1,0 +1,94 @@
+<div class="apex-page-header">
+    <div class="apex-page-header__title">
+        <h1>Inbox</h1>
+        <div class="apex-page-header__subtitle">Tasks assigned to you and notifications from underwriting workflow.</div>
+    </div>
+    <div class="apex-page-header__actions" ng-if="vm.canSeeOverdue()">
+        <button type="button" class="apex-btn apex-btn--sm"
+                ng-class="vm.showOverdue ? 'apex-btn--primary' : 'apex-btn--ghost'"
+                ng-click="vm.toggleOverdue()">
+            {{vm.showOverdue ? 'Showing team overdue' : 'Show team overdue'}}
+        </button>
+    </div>
+</div>
+
+<div class="apex-alert apex-alert--danger" ng-if="vm.actionError">{{vm.actionError}}</div>
+<div class="apex-alert apex-alert--danger" ng-if="vm.error && !vm.loading">{{vm.error}}</div>
+
+<div class="apex-loading" ng-if="vm.loading">
+    <span class="apex-spinner"></span> Loading inbox…
+</div>
+
+<div class="apex-grid-2" ng-if="!vm.loading">
+    <div class="apex-card">
+        <div class="apex-card__header">
+            <h3>{{vm.showOverdue ? 'Overdue team tasks' : 'My open tasks'}}</h3>
+        </div>
+
+        <apex-empty-state ng-if="vm.tasks.length === 0"
+                           title="'No open tasks'"
+                           message="'Assigned work and overdue items will appear here.'"></apex-empty-state>
+
+        <div class="apex-table-wrap" ng-if="vm.tasks.length > 0">
+            <table class="apex-table">
+                <thead>
+                <tr>
+                    <th>Task</th>
+                    <th>Due</th>
+                    <th>Priority</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr ng-repeat="t in vm.tasks" ng-class="{'apex-row--warn': t.isOverdue}" class="clickable" ng-click="vm.openTask(t)">
+                    <td>
+                        <strong>{{t.title}}</strong>
+                        <div class="apex-text-muted" ng-if="t.description">{{t.description}}</div>
+                        <div class="apex-text-muted" ng-if="t.assignedToName && vm.showOverdue">{{t.assignedToName}}</div>
+                        <a ng-if="vm.taskLink(t)" class="apex-table__link" ng-href="{{vm.taskLink(t)}}" ng-click="$event.stopPropagation()">
+                            Open Task View
+                        </a>
+                        <a ng-if="t.submissionId" class="apex-table__link apex-ml-8"
+                           ng-href="/ng8/case-hub/{{t.submissionId}}" ng-click="$event.stopPropagation()">UW File</a>
+                    </td>
+                    <td>
+                        <span ng-class="{'apex-badge apex-badge--warn': t.isOverdue}">
+                            {{t.dueDate | date:'dd MMM yyyy'}}
+                        </span>
+                    </td>
+                    <td>{{t.priority || '—'}}</td>
+                    <td>
+                        <button type="button" class="apex-btn apex-btn--sm apex-btn--primary"
+                                ng-disabled="vm.busyTaskId === t.id"
+                                ng-click="vm.completeTask(t); $event.stopPropagation()">Complete</button>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="apex-card">
+        <div class="apex-card__header"><h3>Notifications</h3></div>
+
+        <apex-empty-state ng-if="vm.notifications.length === 0"
+                           title="'No notifications'"
+                           message="'Assignments, referrals and task alerts land here.'"></apex-empty-state>
+
+        <ul class="apex-notif-list" ng-if="vm.notifications.length > 0">
+            <li ng-repeat="n in vm.notifications" ng-class="{'apex-notif-list__item--unread': !n.isRead}">
+                <div class="apex-notif-list__body">
+                    <strong>{{n.title}}</strong>
+                    <div class="apex-text-muted">{{n.message}}</div>
+                    <div class="apex-text-muted">{{n.createdDate | date:'dd MMM yyyy HH:mm'}}</div>
+                    <a ng-if="vm.notifLink(n)" class="apex-table__link" ng-href="{{vm.notifLink(n)}}"
+                       ng-click="vm.markRead(n)">Open</a>
+                </div>
+                <button type="button" class="apex-btn apex-btn--sm apex-btn--ghost"
+                        ng-if="!n.isRead"
+                        ng-disabled="vm.busyNotifId === n.id"
+                        ng-click="vm.markRead(n)">Mark read</button>
+            </li>
+        </ul>
+    </div>
+</div>

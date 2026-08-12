@@ -1,0 +1,795 @@
+<div class="apex-breadcrumb">
+  <a [href]="auth.shellUrl('/pipeline/upcoming')">Pipeline</a> &rsaquo;
+  Underwriter's File &rsaquo; {{ uwReference }}
+</div>
+
+<apex-loading *ngIf="loading" label="Loading underwriter file…"></apex-loading>
+<div class="apex-alert apex-alert--danger" *ngIf="error && !loading">{{ error }}</div>
+<apex-empty-state *ngIf="notFound && !loading" title="Submission not found"
+                   message="No underwriter file exists for this id."></apex-empty-state>
+
+<div class="uw-layout" *ngIf="file && !loading">
+  <aside class="uw-rail">
+    <button type="button" [class.active]="nav === 'dashboard'" (click)="setNav('dashboard')">Dashboard</button>
+    <button type="button" [class.active]="nav === 'policy'" (click)="setNav('policy')">Policy</button>
+    <button type="button" [class.active]="nav === 'claim'" (click)="setNav('claim')">Claim</button>
+    <button type="button" [class.active]="nav === 'activity'" (click)="setNav('activity')">Activity Log</button>
+    <button type="button" [class.active]="nav === 'associations'" (click)="setNav('associations')">Associations</button>
+    <button type="button" [class.active]="nav === 'premium'" (click)="setNav('premium')">Premium Monitoring</button>
+    <button type="button" [class.active]="nav === 'documents'" (click)="setNav('documents')">Documents</button>
+  </aside>
+
+  <div class="uw-main">
+    <div class="uw-header">
+      <div class="uw-header__identity">
+        <strong class="uw-account">{{ file.insuredName || '—' }}</strong>
+        <apex-status-badge kind="submission" [value]="file.status"></apex-status-badge>
+        <span class="uw-meta">
+          UW Ref: <span class="apex-mono">{{ uwReference }}</span>
+          · YOA: {{ file.yoa != null ? file.yoa : '—' }}
+        </span>
+      </div>
+      <div class="uw-toolbar">
+        <a class="apex-btn apex-btn--sm" [href]="openBoxUrl()" title="Open Box (placeholder)" target="_blank" rel="noopener">Open Box</a>
+        <button type="button" class="apex-btn apex-btn--sm" (click)="setRiskTab('summary'); setNav('policy')">Summary</button>
+        <button type="button" class="apex-btn apex-btn--sm" disabled title="CSR">CSR</button>
+        <a class="apex-btn apex-btn--sm" [href]="taskInboxUrl()">Task</a>
+        <button type="button" class="apex-btn apex-btn--sm" (click)="setNav('activity')">Log</button>
+        <button type="button" class="apex-btn apex-btn--sm" (click)="openEditModal()">Edit / Note</button>
+        <button type="button" class="apex-btn apex-btn--sm" (click)="setNav('documents')">Document</button>
+        <a class="apex-btn apex-btn--sm" [href]="modellingUrl()">Model</a>
+      </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <ng-container *ngIf="nav === 'dashboard'">
+      <div class="apex-panel-red">Dashboard | {{ file.insuredName }} | {{ uwReference }}</div>
+      <div class="apex-card apex-card--flat">
+        <dl class="apex-kv apex-kv--dense">
+          <dt>Account</dt><dd>{{ file.insuredName || '—' }}</dd>
+          <dt>Status</dt><dd>{{ file.status || '—' }}</dd>
+          <dt>UW Reference</dt><dd class="apex-mono">{{ uwReference }}</dd>
+          <dt>YOA</dt><dd>{{ file.yoa != null ? file.yoa : '—' }}</dd>
+          <dt>Broker</dt><dd>{{ file.brokerName || '—' }}</dd>
+          <dt>Sections</dt><dd>{{ file.sections?.length || 0 }}</dd>
+          <dt>Gross premium</dt><dd>{{ file.grossPremium != null ? ('£' + (file.grossPremium | number:'1.0-0')) : '—' }}</dd>
+          <dt>Net premium</dt><dd>{{ file.netPremium != null ? ('£' + (file.netPremium | number:'1.0-0')) : '—' }}</dd>
+          <dt>Claims</dt><dd>{{ file.claims?.length || 0 }}</dd>
+          <dt>Open activities</dt><dd>{{ file.activityLog?.length || 0 }}</dd>
+        </dl>
+      </div>
+    </ng-container>
+
+    <!-- POLICY / RISK VIEW -->
+    <ng-container *ngIf="nav === 'policy'">
+      <div class="apex-panel-red">Risk View | {{ file.insuredName }} | {{ file.status }} | {{ uwReference }}</div>
+
+      <div class="apex-tabs">
+        <div class="apex-tabs__tab" [class.active]="riskTab === 'summary'" (click)="setRiskTab('summary')">Policy Summary</div>
+        <div class="apex-tabs__tab" [class.active]="riskTab === 'notes'" (click)="setRiskTab('notes')">Notes</div>
+        <div class="apex-tabs__tab" [class.active]="riskTab === 'performance'" (click)="setRiskTab('performance')">Performance</div>
+        <div class="apex-tabs__tab" [class.active]="riskTab === 'quotes'" (click)="setRiskTab('quotes')">Quotes / Sections</div>
+      </div>
+
+      <div class="apex-card apex-card--flat" *ngIf="riskTab === 'summary'">
+        <h3 class="uw-subhead">Policy identity</h3>
+        <dl class="apex-kv apex-kv--dense">
+          <dt>Inception</dt><dd>{{ (file.policyEffectiveDate || file.requestedEffectiveDate) | date:'dd MMM yyyy' }}</dd>
+          <dt>Expiry</dt><dd>{{ file.policyExpiryDate ? (file.policyExpiryDate | date:'dd MMM yyyy') : '—' }}</dd>
+          <dt>Broker</dt><dd>{{ file.brokerName || '—' }}</dd>
+          <dt>Broker Contact</dt><dd>{{ file.brokerContact || '—' }}</dd>
+          <dt>UMR</dt><dd>{{ file.umr || '—' }}</dd>
+          <dt>Broker Reference</dt><dd>{{ file.brokerReference || '—' }}</dd>
+          <dt>MOP</dt><dd>{{ file.mop || '—' }}</dd>
+          <dt>Policy Description</dt><dd>{{ file.policyDescription || '—' }}</dd>
+          <dt>Insured</dt><dd>{{ file.insuredName || '—' }}</dd>
+          <dt>Reinsured</dt><dd>{{ file.reinsured || '—' }}</dd>
+          <dt>Domicile</dt><dd>{{ file.domicile || '—' }}</dd>
+          <dt>Slip Leader</dt><dd>{{ file.slipLeader || '—' }}</dd>
+          <dt>Policy Type</dt><dd>{{ file.policyType || '—' }}</dd>
+          <dt>Risk Appetite</dt><dd>{{ file.riskAppetite || '—' }}</dd>
+        </dl>
+
+        <h3 class="uw-subhead">Policy / Apex Share metrics</h3>
+        <dl class="apex-kv apex-kv--dense">
+          <dt>Gross Premium</dt><dd>{{ file.grossPremium != null ? ('£' + (file.grossPremium | number:'1.0-0')) : '—' }}</dd>
+          <dt>Net Premium</dt><dd>{{ file.netPremium != null ? ('£' + (file.netPremium | number:'1.0-0')) : '—' }}</dd>
+          <dt>Weighted TI</dt><dd>{{ file.weightedTi != null ? (file.weightedTi | number:'1.2-2') : '—' }}</dd>
+          <dt>Weighted RRM</dt><dd>{{ file.weightedRrm != null ? (file.weightedRrm | number:'1.2-2') : '—' }}</dd>
+          <dt>Long Term Loss Ratio</dt><dd>{{ file.longTermLossRatio != null ? (file.longTermLossRatio | number:'1.2-2') : '—' }}</dd>
+          <dt>Rate Adequacy</dt><dd>{{ file.rateAdequacy != null ? (file.rateAdequacy | number:'1.2-2') : '—' }}</dd>
+          <dt>Expected Premium</dt><dd>{{ file.expectedPremium != null ? ('£' + (file.expectedPremium | number:'1.0-0')) : '—' }}</dd>
+          <dt>Net Signed Premium</dt><dd>{{ file.netSignedPremium != null ? ('£' + (file.netSignedPremium | number:'1.0-0')) : '—' }}</dd>
+          <dt>Exposure</dt><dd>{{ file.sumInsured != null ? ('£' + (file.sumInsured | number:'1.0-0')) : '—' }}</dd>
+        </dl>
+      </div>
+
+      <div class="apex-card apex-card--flat" *ngIf="riskTab === 'notes'">
+        <p *ngIf="file.notesType"><strong>Notes type:</strong> {{ file.notesType }}</p>
+        <p *ngIf="file.notes">{{ file.notes }}</p>
+        <p class="apex-text-muted" *ngIf="!file.notes">No underwriting notes. Use Edit / Note to write through Open Box.</p>
+        <h3>Risk answers</h3>
+        <div class="apex-alert apex-alert--danger" *ngIf="riskError">{{ riskError }}</div>
+        <table class="apex-table apex-table--dense" *ngIf="riskAnswers.length">
+          <thead><tr><th>Code</th><th>Question</th><th>Answer</th><th></th></tr></thead>
+          <tbody>
+            <tr *ngFor="let a of riskAnswers; let i = index">
+              <td><input [(ngModel)]="a.questionCode"></td>
+              <td><input [(ngModel)]="a.questionText"></td>
+              <td><input [(ngModel)]="a.answerText"></td>
+              <td><button type="button" class="apex-btn apex-btn--sm apex-btn--ghost" (click)="removeRiskAnswer(i)">Remove</button></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="apex-btn-row">
+          <button type="button" class="apex-btn apex-btn--ghost apex-btn--sm" (click)="addRiskAnswer()">+ Add</button>
+          <button type="button" class="apex-btn apex-btn--primary apex-btn--sm" [disabled]="riskSaving" (click)="saveRiskAnswers()">
+            {{ riskSaving ? 'Saving…' : 'Save notes / answers' }}
+          </button>
+        </div>
+      </div>
+
+      <div class="apex-card apex-card--flat" *ngIf="riskTab === 'performance'">
+        <div class="uw-perf-filters">
+          <label>YOA <strong>{{ file.yoa != null ? file.yoa : '—' }}</strong></label>
+          <label>
+            CCY
+            <select [(ngModel)]="performanceCcy" name="perfCcy">
+              <option value="GBP">GBP</option>
+              <option value="USD">USD</option>
+              <option value="EUR">EUR</option>
+            </select>
+          </label>
+          <span class="uw-roe-note">ROE: rates as at settlement (Open Box replica)</span>
+        </div>
+
+        <h3 class="uw-subhead">Apex Line Share</h3>
+        <table class="apex-table apex-table--dense">
+          <thead>
+            <tr>
+              <th>YOA</th><th>CCY</th><th>Gross</th><th>Net</th>
+              <th>Paid</th><th>OS Reserve</th><th>Incurred</th><th>LR</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let r of filteredPerformanceRows(file.performance?.lineShare)">
+              <td>{{ r.yoa != null ? r.yoa : '—' }}</td>
+              <td>{{ r.ccy || '—' }}</td>
+              <td>£{{ r.grossPremium | number:'1.0-0' }}</td>
+              <td>£{{ r.netPremium | number:'1.0-0' }}</td>
+              <td>£{{ r.paidClaims | number:'1.0-0' }}</td>
+              <td>£{{ r.outstandingReserve | number:'1.0-0' }}</td>
+              <td>£{{ r.incurredClaims | number:'1.0-0' }}</td>
+              <td>{{ r.lossRatio != null ? (r.lossRatio | number:'1.2-2') : '—' }}</td>
+            </tr>
+            <tr *ngIf="!filteredPerformanceRows(file.performance?.lineShare)?.length">
+              <td colspan="8" class="uw-empty-row">No Apex Line Share rows</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3 class="uw-subhead">100% Order</h3>
+        <table class="apex-table apex-table--dense">
+          <thead>
+            <tr>
+              <th>YOA</th><th>CCY</th><th>Gross</th><th>Net</th>
+              <th>Paid</th><th>OS Reserve</th><th>Incurred</th><th>LR</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let r of filteredPerformanceRows(file.performance?.fullOrder)">
+              <td>{{ r.yoa != null ? r.yoa : '—' }}</td>
+              <td>{{ r.ccy || '—' }}</td>
+              <td>£{{ r.grossPremium | number:'1.0-0' }}</td>
+              <td>£{{ r.netPremium | number:'1.0-0' }}</td>
+              <td>£{{ r.paidClaims | number:'1.0-0' }}</td>
+              <td>£{{ r.outstandingReserve | number:'1.0-0' }}</td>
+              <td>£{{ r.incurredClaims | number:'1.0-0' }}</td>
+              <td>{{ r.lossRatio != null ? (r.lossRatio | number:'1.2-2') : '—' }}</td>
+            </tr>
+            <tr *ngIf="!filteredPerformanceRows(file.performance?.fullOrder)?.length">
+              <td colspan="8" class="uw-empty-row">No 100% Order rows</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="apex-card apex-card--flat" *ngIf="riskTab === 'quotes'">
+        <div class="apex-card__header">
+          <h3>Sections (quotes)</h3>
+          <button type="button" class="apex-btn apex-btn--sm" *ngIf="file.status !== 'Bound'" (click)="toggleQuoteForm()">
+            {{ showQuoteForm ? 'Cancel' : '+ Create quote' }}
+          </button>
+        </div>
+        <div class="apex-alert apex-alert--danger" *ngIf="quotesError">{{ quotesError }}</div>
+        <form *ngIf="showQuoteForm" (ngSubmit)="createQuote()" class="apex-mt-16">
+          <div class="apex-form-grid">
+            <div class="apex-form-row"><label>Sum insured</label><input type="number" name="si" [(ngModel)]="quoteDraft.sumInsured"></div>
+            <div class="apex-form-row"><label>Limit</label><input type="number" name="lim" [(ngModel)]="quoteDraft.limitOfIndemnity"></div>
+            <div class="apex-form-row"><label>Deductible</label><input type="number" name="ded" [(ngModel)]="quoteDraft.deductible"></div>
+            <div class="apex-form-row"><label>Commission %</label><input type="number" name="comm" [(ngModel)]="quoteDraft.commissionPercent"></div>
+          </div>
+          <button type="submit" class="apex-btn apex-btn--primary" [disabled]="quoteCreating">
+            {{ quoteCreating ? 'Rating…' : 'Rate &amp; save quote' }}
+          </button>
+        </form>
+        <table class="apex-table apex-table--dense" *ngIf="file.sections?.length">
+          <thead>
+            <tr>
+              <th>UW Ref</th><th>Ver</th><th>GoM Wind</th><th>LBS</th><th>LIC</th>
+              <th>Excess</th><th>Est Sign</th><th>Act Sign</th><th>Exposure</th>
+              <th>RRM</th><th>TI</th><th>Gross</th><th>Referral</th><th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let s of file.sections" (click)="selectSection(s)" [class.apex-row--selected]="selectedSection?.quoteId === s.quoteId">
+              <td class="apex-mono">{{ s.quoteNumber }}</td>
+              <td>v{{ s.versionNumber }}</td>
+              <td>{{ s.gomWind || '—' }}</td>
+              <td>{{ s.lbs ? 'Y' : 'N' }}</td>
+              <td>{{ s.lic ? 'Y' : 'N' }}</td>
+              <td>£{{ s.deductible | number:'1.0-0' }}</td>
+              <td>{{ s.estSigning != null ? s.estSigning : '—' }}</td>
+              <td>{{ s.actSigning != null ? s.actSigning : '—' }}</td>
+              <td>£{{ (s.exposure != null ? s.exposure : s.sumInsured) | number:'1.0-0' }}</td>
+              <td>{{ s.rrm != null ? (s.rrm | number:'1.2-2') : '—' }}</td>
+              <td>{{ s.technicalIndex != null ? (s.technicalIndex | number:'1.2-2') : '—' }}</td>
+              <td>£{{ s.grossPremium | number:'1.0-0' }}</td>
+              <td>{{ s.isReferralRequired ? s.referralDecision : 'Clear' }}</td>
+              <td class="apex-btn-row" (click)="$event.stopPropagation()">
+                <span class="apex-badge apex-badge--success" *ngIf="s.isSelected">Selected</span>
+                <button type="button" class="apex-btn apex-btn--sm apex-btn--ghost" *ngIf="!s.isSelected && file.status !== 'Bound'"
+                        [disabled]="quoteBusyId === s.quoteId" (click)="selectQuote(s)">Select</button>
+                <button type="button" class="apex-btn apex-btn--sm apex-btn--primary" *ngIf="file.status !== 'Bound' && canBind(s)"
+                        [disabled]="quoteBusyId === s.quoteId" (click)="bindQuote(s)">Bind</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="apex-panel-red" *ngIf="selectedSection">
+        Section View | {{ file.insuredName }} | {{ file.status }} | {{ selectedSection.quoteNumber }}
+      </div>
+      <div *ngIf="selectedSection">
+        <div class="apex-tabs">
+          <div class="apex-tabs__tab" [class.active]="sectionTab === 'summary'" (click)="setSectionTab('summary')">Section Summary</div>
+          <div class="apex-tabs__tab" [class.active]="sectionTab === 'limits'" (click)="setSectionTab('limits')">Limits</div>
+          <div class="apex-tabs__tab" [class.active]="sectionTab === 'premiums'" (click)="setSectionTab('premiums')">Premiums</div>
+          <div class="apex-tabs__tab" [class.active]="sectionTab === 'performance'" (click)="setSectionTab('performance')">Performance</div>
+          <div class="apex-tabs__tab" [class.active]="sectionTab === 'bureau'" (click)="setSectionTab('bureau')">Bureau</div>
+          <div class="apex-tabs__tab" [class.active]="sectionTab === 'deductions'" (click)="setSectionTab('deductions')">Deductions</div>
+          <div class="apex-tabs__tab" [class.active]="sectionTab === 'outwardsRi'" (click)="setSectionTab('outwardsRi')">Outwards RI</div>
+          <div class="apex-tabs__tab" [class.active]="sectionTab === 'declarations'" (click)="setSectionTab('declarations')">Declarations</div>
+        </div>
+
+        <div class="apex-card apex-card--flat" *ngIf="sectionTab === 'summary'">
+          <div class="uw-section-layout">
+            <dl class="apex-kv apex-kv--dense">
+              <dt>Business Area</dt><dd>{{ selectedSection.businessArea || file.businessArea || '—' }}</dd>
+              <dt>Stat1</dt><dd>{{ selectedSection.statCode1 || '—' }}</dd>
+              <dt>Stat2</dt><dd>{{ selectedSection.statCode2 || '—' }}</dd>
+              <dt>Sub Stat1</dt><dd>{{ selectedSection.subStat1 || '—' }}</dd>
+              <dt>Basis</dt><dd>{{ selectedSection.basis || '—' }}</dd>
+              <dt>Facility</dt><dd>{{ selectedSection.facility ? 'Y' : 'N' }}</dd>
+              <dt>LIC Secondee</dt><dd>{{ selectedSection.licSecondee || '—' }}</dd>
+              <dt>E-trading</dt><dd>{{ selectedSection.etradingPlatform || '—' }}</dd>
+              <dt>CCY</dt><dd>{{ selectedSection.ccy || '—' }}</dd>
+              <dt>FAC RI</dt><dd>{{ selectedSection.facRi ? 'Y' : 'N' }}</dd>
+              <dt>Syndicate</dt><dd>{{ selectedSection.syndicate || '—' }}</dd>
+              <dt>Written Line</dt><dd>{{ selectedSection.writtenLine != null ? selectedSection.writtenLine : '—' }}</dd>
+              <dt>Signed Line</dt><dd>{{ selectedSection.signedLine != null ? selectedSection.signedLine : '—' }}</dd>
+              <dt>Est Signing</dt><dd>{{ selectedSection.estSigning != null ? selectedSection.estSigning : '—' }}</dd>
+              <dt>Act Signing</dt><dd>{{ selectedSection.actSigning != null ? selectedSection.actSigning : '—' }}</dd>
+              <dt>Broker Order</dt><dd>{{ selectedSection.brokerOrder != null ? selectedSection.brokerOrder : '—' }}</dd>
+              <dt>Technical Index</dt><dd>{{ selectedSection.technicalIndex != null ? selectedSection.technicalIndex : '—' }}</dd>
+              <dt>Risk Code</dt><dd>{{ selectedSection.riskCode || '—' }}</dd>
+              <dt>Inception</dt><dd>{{ selectedSection.inception ? (selectedSection.inception | date:'dd MMM yyyy') : '—' }}</dd>
+              <dt>Expiry</dt><dd>{{ selectedSection.expiry ? (selectedSection.expiry | date:'dd MMM yyyy') : '—' }}</dd>
+              <dt>UW Principal</dt><dd>{{ selectedSection.uwPrincipal || file.underwriterName || '—' }}</dd>
+            </dl>
+            <div class="uw-kpi-strip">
+              <div class="uw-kpi-strip__item"><span class="uw-kpi-strip__label">RRM</span><span class="uw-kpi-strip__value">{{ selectedSection.rrm != null ? (selectedSection.rrm | number:'1.2-2') : '—' }}</span></div>
+              <div class="uw-kpi-strip__item"><span class="uw-kpi-strip__label">Ded X/S</span><span class="uw-kpi-strip__value">{{ selectedSection.dedXs != null ? ('£' + (selectedSection.dedXs | number:'1.0-0')) : '—' }}</span></div>
+              <div class="uw-kpi-strip__item"><span class="uw-kpi-strip__label">Prem/Rate</span><span class="uw-kpi-strip__value">{{ selectedSection.premRate != null ? (selectedSection.premRate | number:'1.2-4') : '—' }}</span></div>
+              <div class="uw-kpi-strip__item"><span class="uw-kpi-strip__label">Limit</span><span class="uw-kpi-strip__value">£{{ selectedSection.limitOfIndemnity | number:'1.0-0' }}</span></div>
+              <div class="uw-kpi-strip__item"><span class="uw-kpi-strip__label">Risk Change</span><span class="uw-kpi-strip__value">{{ selectedSection.riskChange != null ? (selectedSection.riskChange | number:'1.2-2') : '—' }}</span></div>
+              <div class="uw-kpi-strip__item"><span class="uw-kpi-strip__label">T&amp;C</span><span class="uw-kpi-strip__value">{{ selectedSection.tcChange != null ? (selectedSection.tcChange | number:'1.2-2') : '—' }}</span></div>
+              <div class="uw-kpi-strip__item"><span class="uw-kpi-strip__label">Other</span><span class="uw-kpi-strip__value">{{ selectedSection.otherChange != null ? (selectedSection.otherChange | number:'1.2-2') : '—' }}</span></div>
+              <div class="uw-kpi-strip__item uw-kpi-strip__item--total"><span class="uw-kpi-strip__label">Total</span><span class="uw-kpi-strip__value">{{ selectedSection.kpiTotal != null ? (selectedSection.kpiTotal | number:'1.2-2') : '—' }}</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="apex-card apex-card--flat" *ngIf="sectionTab === 'limits'">
+          <table class="apex-table apex-table--dense">
+            <thead>
+              <tr>
+                <th>Agg</th><th>Type</th><th>Basis</th><th>Co-ins</th>
+                <th>Limit</th><th>Excess</th><th>Agg Limit</th><th>Desc</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let r of selectedSection.limitsRows">
+                <td>{{ r.col1 || '—' }}</td>
+                <td>{{ r.col2 || '—' }}</td>
+                <td>{{ r.col3 || '—' }}</td>
+                <td>{{ r.col4 || '—' }}</td>
+                <td>{{ r.col5 || '—' }}</td>
+                <td>{{ r.col6 || '—' }}</td>
+                <td>{{ r.col7 || '—' }}</td>
+                <td>{{ r.col8 || '—' }}</td>
+              </tr>
+              <tr *ngIf="!selectedSection.limitsRows?.length">
+                <td colspan="8" class="uw-empty-row">No limits rows</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="apex-card apex-card--flat" *ngIf="sectionTab === 'premiums'">
+          <table class="apex-table apex-table--dense">
+            <thead>
+              <tr>
+                <th>Type</th><th>Basis</th><th>CCY</th><th>EGPI</th>
+                <th>ENPI</th><th>Comm</th><th>SDI</th><th>Desc</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let r of selectedSection.premiumRows">
+                <td>{{ r.col1 || '—' }}</td>
+                <td>{{ r.col2 || '—' }}</td>
+                <td>{{ r.col3 || '—' }}</td>
+                <td>{{ r.col4 || '—' }}</td>
+                <td>{{ r.col5 || '—' }}</td>
+                <td>{{ r.col6 || '—' }}</td>
+                <td>{{ r.col7 || '—' }}</td>
+                <td>{{ r.col8 || '—' }}</td>
+              </tr>
+              <tr *ngIf="!selectedSection.premiumRows?.length">
+                <td colspan="8" class="uw-empty-row">No premium rows</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="apex-card apex-card--flat" *ngIf="sectionTab === 'performance'">
+          <table class="apex-table apex-table--dense">
+            <thead>
+              <tr><th>Status</th><th>YOA</th><th>Technical Premium</th><th>Signed Premium</th><th>PLR</th><th>ILR</th></tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let r of selectedSection.performanceRows">
+                <td>{{ r.col1 || '—' }}</td>
+                <td>{{ r.col2 || '—' }}</td>
+                <td>{{ r.col3 || '—' }}</td>
+                <td>{{ r.col4 || '—' }}</td>
+                <td>{{ r.col5 || '—' }}</td>
+                <td>{{ r.col6 || '—' }}</td>
+              </tr>
+              <tr *ngIf="!selectedSection.performanceRows?.length">
+                <td colspan="6" class="uw-empty-row">No performance rows</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="apex-card apex-card--flat" *ngIf="sectionTab === 'bureau'">
+          <table class="apex-table apex-table--dense">
+            <thead>
+              <tr><th>Bureau Ref</th><th>Lloyd's PIN</th><th>Status</th><th>Detail</th></tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let r of selectedSection.bureauRows">
+                <td>{{ r.col1 || '—' }}</td>
+                <td>{{ r.col2 || '—' }}</td>
+                <td>{{ r.col3 || '—' }}</td>
+                <td>{{ r.col4 || '—' }}</td>
+              </tr>
+              <tr *ngIf="!selectedSection.bureauRows?.length">
+                <td colspan="4" class="uw-empty-row">No bureau rows</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="apex-card apex-card--flat" *ngIf="sectionTab === 'deductions'">
+          <table class="apex-table apex-table--dense">
+            <thead>
+              <tr><th>Type</th><th>%</th><th>Amount</th><th>CCY</th></tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let r of selectedSection.deductionRows">
+                <td>{{ r.col1 || '—' }}</td>
+                <td>{{ r.col2 || '—' }}</td>
+                <td>{{ r.col3 || '—' }}</td>
+                <td>{{ r.col4 || '—' }}</td>
+              </tr>
+              <tr *ngIf="!selectedSection.deductionRows?.length">
+                <td colspan="4" class="uw-empty-row">No deduction rows</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="apex-card apex-card--flat" *ngIf="sectionTab === 'outwardsRi'">
+          <table class="apex-table apex-table--dense">
+            <thead>
+              <tr><th>RI Type</th><th>Carrier</th><th>%</th><th>Premium</th><th>Exposure</th></tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let r of selectedSection.outwardsRiRows">
+                <td>{{ r.col1 || '—' }}</td>
+                <td>{{ r.col2 || '—' }}</td>
+                <td>{{ r.col3 || '—' }}</td>
+                <td>{{ r.col4 || '—' }}</td>
+                <td>{{ r.col5 || '—' }}</td>
+              </tr>
+              <tr *ngIf="!selectedSection.outwardsRiRows?.length">
+                <td colspan="5" class="uw-empty-row">No outwards RI rows</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="apex-card apex-card--flat" *ngIf="sectionTab === 'declarations'">
+          <table class="apex-table apex-table--dense">
+            <thead>
+              <tr><th>Declaration Date</th><th>Period</th><th>Premium</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let r of selectedSection.declarationRows">
+                <td>{{ r.col1 || '—' }}</td>
+                <td>{{ r.col2 || '—' }}</td>
+                <td>{{ r.col3 || '—' }}</td>
+                <td>{{ r.col4 || '—' }}</td>
+              </tr>
+              <tr *ngIf="!selectedSection.declarationRows?.length">
+                <td colspan="4" class="uw-empty-row">No declaration rows</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- CLAIMS -->
+    <ng-container *ngIf="nav === 'claim'">
+      <div class="apex-panel-red">Claims | {{ file.insuredName }}</div>
+      <div class="uw-kpi-strip" *ngIf="file.claims?.length">
+        <div class="uw-kpi-strip__item"><span class="uw-kpi-strip__label">ILR</span><span class="uw-kpi-strip__value">{{ claimKpis.ilr != null ? (claimKpis.ilr | number:'1.2-2') : '—' }}</span></div>
+        <div class="uw-kpi-strip__item"><span class="uw-kpi-strip__label">CAP</span><span class="uw-kpi-strip__value">{{ claimKpis.cap != null ? claimKpis.cap : '—' }}</span></div>
+        <div class="uw-kpi-strip__item"><span class="uw-kpi-strip__label">Apex Share NP</span><span class="uw-kpi-strip__value">{{ claimKpis.apexShareNp != null ? ('£' + (claimKpis.apexShareNp | number:'1.0-0')) : '—' }}</span></div>
+        <div class="uw-kpi-strip__item"><span class="uw-kpi-strip__label">Exposure</span><span class="uw-kpi-strip__value">{{ claimKpis.exposure != null ? ('£' + (claimKpis.exposure | number:'1.0-0')) : '—' }}</span></div>
+      </div>
+      <apex-empty-state *ngIf="!file.claims?.length" title="No claims reported" message="Claims appear after FNOL on a bound policy."></apex-empty-state>
+      <table class="apex-table apex-table--dense" *ngIf="file.claims?.length">
+        <thead>
+          <tr>
+            <th>UCR</th><th>Claim #</th><th>Claimant</th><th>Location</th>
+            <th>DOL</th><th>DON</th><th>CCY</th><th>PTD</th>
+            <th>Status</th><th>Reserve</th><th>Paid</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let c of file.claims">
+            <td>{{ c.ucr || '—' }}</td>
+            <td><a class="apex-table__link" [href]="auth.shellUrl('/claims/' + c.id)">{{ c.claimNumber }}</a></td>
+            <td>{{ c.claimant || '—' }}</td>
+            <td>{{ c.location || '—' }}</td>
+            <td>{{ c.dateOfLoss ? (c.dateOfLoss | date:'dd MMM yyyy') : '—' }}</td>
+            <td>{{ c.dateOfNotification ? (c.dateOfNotification | date:'dd MMM yyyy') : '—' }}</td>
+            <td>{{ c.ccy || '—' }}</td>
+            <td>{{ c.ptd != null ? ('£' + (c.ptd | number:'1.0-0')) : '—' }}</td>
+            <td>{{ c.status }}</td>
+            <td>£{{ c.reserveAmount | number:'1.0-0' }}</td>
+            <td>£{{ c.paidAmount | number:'1.0-0' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </ng-container>
+
+    <!-- ACTIVITY -->
+    <ng-container *ngIf="nav === 'activity'">
+      <div class="apex-panel-red">Activity Log | {{ uwReference }}</div>
+      <apex-empty-state *ngIf="!file.activityLog?.length" title="No activity" message="Tasks, referrals, and audits appear here."></apex-empty-state>
+      <table class="apex-table apex-table--dense" *ngIf="file.activityLog?.length">
+        <thead>
+          <tr>
+            <th>Type</th><th>Title</th><th>Doc Info</th><th>Lloyd's PIN</th>
+            <th>Owner</th><th>Created By/Owner</th><th>Completed By</th><th>Reference</th>
+            <th>Created</th><th>Completed</th><th>Status</th><th>Detail &gt;</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let a of file.activityLog">
+            <td>{{ a.activityType }}</td>
+            <td>{{ a.title }}</td>
+            <td>{{ a.docInfo || '—' }}</td>
+            <td>{{ a.lloydsPin || '—' }}</td>
+            <td>{{ a.ownerName || '—' }}</td>
+            <td>{{ a.ownerName || '—' }}</td>
+            <td>{{ a.completedByName || '—' }}</td>
+            <td>{{ a.reference || '—' }}</td>
+            <td>{{ a.createdDate | date:'dd MMM yyyy HH:mm' }}</td>
+            <td>{{ a.completedDate ? (a.completedDate | date:'dd MMM yyyy HH:mm') : '—' }}</td>
+            <td>{{ a.status }}</td>
+            <td>
+              <a *ngIf="activityDetailUrl(a) as detailUrl" class="apex-table__link" [href]="detailUrl">Detail &gt;</a>
+              <span *ngIf="!activityDetailUrl(a)">{{ a.detail || '—' }}</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </ng-container>
+
+    <!-- ASSOCIATIONS -->
+    <ng-container *ngIf="nav === 'associations'">
+      <div class="apex-panel-red">Associations</div>
+      <table class="apex-table apex-table--dense">
+        <thead>
+          <tr>
+            <th>Kind</th><th>Name</th><th>Description</th><th>YOA</th><th>Notes</th>
+            <th>Gross</th><th>Net</th><th>Exposure</th><th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let a of file.associations">
+            <td>{{ a.kind }}</td>
+            <td>{{ a.label || a.name || '—' }}</td>
+            <td>{{ a.description || '—' }}</td>
+            <td>{{ a.yoa != null ? a.yoa : '—' }}</td>
+            <td>{{ a.notes || '—' }}</td>
+            <td>{{ a.grossPremium != null ? ('£' + (a.grossPremium | number:'1.0-0')) : '—' }}</td>
+            <td>{{ a.netPremium != null ? ('£' + (a.netPremium | number:'1.0-0')) : '—' }}</td>
+            <td>{{ a.exposure != null ? ('£' + (a.exposure | number:'1.0-0')) : '—' }}</td>
+            <td><a *ngIf="a.link" [href]="a.link" class="apex-table__link">Open</a></td>
+          </tr>
+          <tr *ngIf="!file.associations?.length">
+            <td colspan="9" class="uw-empty-row">No associations</td>
+          </tr>
+        </tbody>
+      </table>
+    </ng-container>
+
+    <!-- PREMIUM MONITORING -->
+    <ng-container *ngIf="nav === 'premium'">
+      <div class="apex-panel-red">Premium Monitoring | {{ uwReference }}</div>
+      <apex-empty-state *ngIf="!file.premiumSchedule?.length" title="No premium schedule"
+                       message="Open Box replica — no rows."></apex-empty-state>
+      <table class="apex-table apex-table--dense" *ngIf="file.premiumSchedule?.length">
+        <thead>
+          <tr>
+            <th>UW Reference</th>
+            <th>Inception</th>
+            <th>Expiry</th>
+            <th>EGPI</th>
+            <th>Commission</th>
+            <th>Brokerage</th>
+            <th>PC</th>
+            <th>PC Paid to Date</th>
+            <th>ILR</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let p of file.premiumSchedule">
+            <td class="apex-mono">{{ p.uwReference || '—' }}</td>
+            <td>{{ p.inception ? (p.inception | date:'dd MMM yyyy') : '—' }}</td>
+            <td>{{ p.expiry ? (p.expiry | date:'dd MMM yyyy') : '—' }}</td>
+            <td>{{ p.egpi != null ? ('£' + (p.egpi | number:'1.0-0')) : '—' }}</td>
+            <td>{{ p.commission != null ? ('£' + (p.commission | number:'1.0-0')) : '—' }}</td>
+            <td>{{ p.brokerage != null ? ('£' + (p.brokerage | number:'1.0-0')) : '—' }}</td>
+            <td>{{ p.pc != null ? ('£' + (p.pc | number:'1.0-0')) : '—' }}</td>
+            <td>{{ p.pcPaidToDate != null ? ('£' + (p.pcPaidToDate | number:'1.0-0')) : '—' }}</td>
+            <td>{{ p.ilr != null ? (p.ilr | number:'1.2-2') : '—' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </ng-container>
+
+    <!-- DOCUMENTS -->
+    <ng-container *ngIf="nav === 'documents'">
+      <div class="apex-panel-red">Documents | {{ file.insuredName }} | {{ uwReference }}</div>
+      <div class="apex-btn-row apex-mb-16">
+        <a class="apex-btn apex-btn--sm apex-btn--primary" [href]="shellDocumentsUrl()">Manage / upload</a>
+      </div>
+      <apex-empty-state *ngIf="!file.documents?.length" title="No documents" message="Upload proposal forms and schedules from Documents."></apex-empty-state>
+      <div class="uw-docs-layout" *ngIf="file.documents?.length">
+        <div class="uw-docs-folders">
+          <div class="uw-docs-folder" *ngFor="let folder of documentFolders">
+            <div class="uw-docs-folder__title">{{ folder.type }}</div>
+            <ul class="uw-docs-folder__list">
+              <li *ngFor="let d of folder.docs" [class.uw-docs-folder__item--active]="previewDocId === d.id">
+                <button type="button" class="uw-docs-file" (click)="previewDocument(d)">{{ d.fileName }}</button>
+                <button type="button" class="apex-btn apex-btn--sm apex-btn--ghost" (click)="downloadDocument(d)">Download</button>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="uw-docs-preview" *ngIf="previewDoc">
+          <div class="uw-docs-preview__header">
+            <strong>{{ previewDoc.fileName }}</strong>
+            <span class="apex-text-muted">{{ previewDoc.documentType }} · v{{ previewDoc.versionNumber }}</span>
+          </div>
+          <iframe *ngIf="isPdfDoc(previewDoc)"
+                  class="uw-docs-preview__frame"
+                  [src]="documentPreviewUrl(previewDoc)"
+                  title="Document preview"></iframe>
+          <p class="apex-text-muted" *ngIf="!isPdfDoc(previewDoc)">
+            Preview available for PDF only. Use Download for this file ({{ previewDoc.contentType || 'unknown type' }}).
+          </p>
+        </div>
+      </div>
+    </ng-container>
+  </div>
+</div>
+
+<!-- Edit / Note modal (UI-EDIT) -->
+<div class="uw-modal-backdrop" *ngIf="showEditModal" (click)="closeEditModal()"></div>
+<div class="uw-modal" *ngIf="showEditModal" role="dialog" aria-labelledby="uw-edit-title">
+  <div class="uw-modal__header">
+    <h2 id="uw-edit-title">Add Underwriting Information to {{ uwReference }}</h2>
+    <button type="button" class="apex-btn apex-btn--sm apex-btn--ghost" (click)="closeEditModal()" [disabled]="editSaving">Close</button>
+  </div>
+  <p class="uw-modal__hint">Writes go through Open Box. Display refreshes from the Open Box replica after submit.</p>
+  <div class="apex-alert apex-alert--danger" *ngIf="editError">{{ editError }}</div>
+  <form (ngSubmit)="submitEdit()">
+    <div class="apex-form-grid">
+      <div class="apex-form-row">
+        <label>Risk Status</label>
+        <select name="riskStatus" [(ngModel)]="editForm.riskStatus">
+          <option value="">—</option>
+          <option value="Received">Received</option>
+          <option value="Quoted">Quoted</option>
+          <option value="Bound">Bound</option>
+          <option value="Declined">Declined</option>
+          <option value="NotTakenUp">Not Taken Up</option>
+        </select>
+      </div>
+      <div class="apex-form-row">
+        <label>Broker Contact</label>
+        <input type="text" name="brokerContact" [(ngModel)]="editForm.brokerContact">
+      </div>
+      <div class="apex-form-row">
+        <label>Inception</label>
+        <input type="date" name="inception" [(ngModel)]="editForm.inception" required>
+      </div>
+      <div class="apex-form-row">
+        <label>Expiry</label>
+        <input type="date" name="expiry" [(ngModel)]="editForm.expiry" required>
+      </div>
+      <div class="apex-form-row">
+        <label>Risk Appetite</label>
+        <input type="text" name="riskAppetite" [(ngModel)]="editForm.riskAppetite">
+      </div>
+      <div class="apex-form-row apex-form-row--full">
+        <label>Policy Description</label>
+        <textarea name="policyDescription" rows="2" [(ngModel)]="editForm.policyDescription"></textarea>
+      </div>
+      <div class="apex-form-row">
+        <label class="uw-check-label">
+          <input type="checkbox" name="renewalWarning" [(ngModel)]="editForm.renewalWarning">
+          Renewal Warning
+        </label>
+      </div>
+      <div class="apex-form-row">
+        <label class="uw-check-label">
+          <input type="checkbox" name="isNonRenewable" [(ngModel)]="editForm.isNonRenewable">
+          Non Renewable
+        </label>
+      </div>
+      <div class="apex-form-row">
+        <label>Principal UW</label>
+        <input type="text" name="principalUw" [(ngModel)]="editForm.principalUw">
+      </div>
+      <div class="apex-form-row">
+        <label>Sub Stat1</label>
+        <input type="text" name="subStat1" [(ngModel)]="editForm.subStat1">
+      </div>
+      <div class="apex-form-row">
+        <label>Sub Stat2</label>
+        <input type="text" name="subStat2" [(ngModel)]="editForm.subStat2">
+      </div>
+      <div class="apex-form-row">
+        <label>E-trading Platform</label>
+        <input type="text" name="etradingPlatform" [(ngModel)]="editForm.etradingPlatform">
+      </div>
+      <div class="apex-form-row">
+        <label>LIC Secondee</label>
+        <input type="text" name="licSecondee" [(ngModel)]="editForm.licSecondee">
+      </div>
+      <div class="apex-form-row">
+        <label>ESG Status</label>
+        <select name="esgStatus" [(ngModel)]="editForm.esgStatus">
+          <option value="">—</option>
+          <option value="Not Assessed">Not Assessed</option>
+          <option value="Exposed">Exposed</option>
+          <option value="Not Exposed">Not Exposed</option>
+          <option value="Transitioning">Transitioning</option>
+        </select>
+      </div>
+      <div class="apex-form-row apex-form-row--full" *ngIf="editForm.esgStatus === 'Exposed'">
+        <div class="uw-esg-help">
+          <strong>ESG Exposed</strong> — risk has material ESG exposure (e.g. fossil fuels, thermal coal, arctic drilling).
+          Confirm sector screening and any transition plan before binding.
+        </div>
+      </div>
+      <div class="apex-form-row">
+        <label>Notes Type</label>
+        <select name="notesType" [(ngModel)]="editForm.notesType">
+          <option value="UWTR">UWTR - Underwriter</option>
+          <option value="OPS">OPS - Operations</option>
+          <option value="CSR">CSR</option>
+        </select>
+      </div>
+      <div class="apex-form-row apex-form-row--full">
+        <label>Notes</label>
+        <textarea name="notes" rows="3" [(ngModel)]="editForm.notes"></textarea>
+      </div>
+      <div class="apex-form-row">
+        <label>Est Signing</label>
+        <input type="number" step="0.01" name="estSigning" [(ngModel)]="editForm.estSigning">
+      </div>
+      <div class="apex-form-row">
+        <label>Ded X/S</label>
+        <input type="number" step="0.01" name="dedXs" [(ngModel)]="editForm.dedXs">
+      </div>
+      <div class="apex-form-row">
+        <label>Prem/Rate</label>
+        <input type="number" step="0.0001" name="premRate" [(ngModel)]="editForm.premRate">
+      </div>
+      <div class="apex-form-row">
+        <label>Risk Change</label>
+        <input type="number" step="0.01" name="riskChange" [(ngModel)]="editForm.riskChange">
+      </div>
+      <div class="apex-form-row">
+        <label>T&amp;C Change</label>
+        <input type="number" step="0.01" name="tcChange" [(ngModel)]="editForm.tcChange">
+      </div>
+      <div class="apex-form-row">
+        <label>Other Change</label>
+        <input type="number" step="0.01" name="otherChange" [(ngModel)]="editForm.otherChange">
+      </div>
+      <div class="apex-form-row">
+        <label>Modelled LR</label>
+        <input type="number" step="0.01" name="modelledLr" [(ngModel)]="editForm.modelledLr">
+      </div>
+      <div class="apex-form-row">
+        <label>Long Term Loss Ratio</label>
+        <input type="number" step="0.01" name="longTermLossRatio" [(ngModel)]="editForm.longTermLossRatio">
+      </div>
+      <div class="apex-form-row">
+        <label>Rate Adequacy</label>
+        <input type="number" step="0.01" name="rateAdequacy" [(ngModel)]="editForm.rateAdequacy">
+      </div>
+      <div class="apex-form-row">
+        <label>Technical Index</label>
+        <input type="number" step="0.01" name="technicalIndex" [(ngModel)]="editForm.technicalIndex">
+      </div>
+      <div class="apex-form-row">
+        <label class="uw-check-label">
+          <input type="checkbox" name="facilityFlag" [(ngModel)]="editForm.facilityFlag">
+          Facility
+        </label>
+      </div>
+      <div class="apex-form-row">
+        <label class="uw-check-label">
+          <input type="checkbox" name="lbsFlag" [(ngModel)]="editForm.lbsFlag">
+          LBS
+        </label>
+      </div>
+      <div class="apex-form-row">
+        <label class="uw-check-label">
+          <input type="checkbox" name="licFlag" [(ngModel)]="editForm.licFlag">
+          LIC
+        </label>
+      </div>
+    </div>
+    <div class="uw-modal__footer">
+      <button type="button" class="apex-btn apex-btn--ghost" (click)="closeEditModal()" [disabled]="editSaving">Cancel</button>
+      <button type="submit" class="apex-btn apex-btn--primary" [disabled]="editSaving">
+        {{ editSaving ? 'Submitting…' : 'Submit' }}
+      </button>
+    </div>
+  </form>
+</div>

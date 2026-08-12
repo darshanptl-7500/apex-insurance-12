@@ -1,0 +1,451 @@
+<div class="apex-page-header">
+  <div>
+    <h1>Admin</h1>
+    <div class="apex-page-header__subtitle">Users, pricing configuration, referral authority, parameters and holidays</div>
+  </div>
+</div>
+
+<div class="apex-alert apex-alert--warning" *ngIf="!canEdit">
+  You have read-only access to this screen. Only Admin users can save changes here.
+</div>
+
+<div class="apex-tabs">
+  <div class="apex-tabs__tab" [class.active]="activeTab === 'users'" (click)="setTab('users')">Users</div>
+  <div class="apex-tabs__tab" [class.active]="activeTab === 'rateTables'" (click)="setTab('rateTables')">Rate Tables</div>
+  <div class="apex-tabs__tab" [class.active]="activeTab === 'referralRules'" (click)="setTab('referralRules')">Referral Rules</div>
+  <div class="apex-tabs__tab" [class.active]="activeTab === 'authorityRules'" (click)="setTab('authorityRules')">Authority Rules</div>
+  <div class="apex-tabs__tab" [class.active]="activeTab === 'parameters'" (click)="setTab('parameters')">Parameters</div>
+  <div class="apex-tabs__tab" [class.active]="activeTab === 'holidays'" (click)="setTab('holidays')">Holidays</div>
+</div>
+
+<!-- USERS -->
+<div class="apex-tab-panel" *ngIf="activeTab === 'users'">
+  <div class="apex-filter-bar">
+    <div class="apex-form-row apex-form-row--grow">
+      <label for="userSearch">Search</label>
+      <input type="search" id="userSearch" [(ngModel)]="usersSearch" placeholder="Username, name, email…">
+    </div>
+    <div class="apex-form-row" *ngIf="canEdit">
+      <button type="button" class="apex-btn apex-btn--primary" (click)="startNewUser()">+ New user</button>
+    </div>
+  </div>
+
+  <div class="apex-card apex-mb-16" *ngIf="showNewUserForm">
+    <h3>{{ editingUserId ? 'Edit user' : 'New user' }}</h3>
+    <div class="apex-alert apex-alert--danger" *ngIf="userFormError">{{ userFormError }}</div>
+    <div class="apex-form-grid">
+      <div class="apex-form-row">
+        <label>Username</label>
+        <input type="text" [(ngModel)]="userForm.username" [disabled]="!!editingUserId">
+      </div>
+      <div class="apex-form-row">
+        <label>Full name</label>
+        <input type="text" [(ngModel)]="userForm.fullName">
+      </div>
+      <div class="apex-form-row">
+        <label>Email</label>
+        <input type="email" [(ngModel)]="userForm.email">
+      </div>
+      <div class="apex-form-row" *ngIf="!editingUserId">
+        <label>Password</label>
+        <input type="password" [(ngModel)]="userForm.password">
+      </div>
+      <div class="apex-form-row">
+        <label>Role</label>
+        <select [(ngModel)]="userForm.role">
+          <option *ngFor="let r of roleOptions" [value]="r">{{ r }}</option>
+        </select>
+      </div>
+      <div class="apex-form-row">
+        <label>Team</label>
+        <select [(ngModel)]="userForm.teamId">
+          <option [ngValue]="undefined">Unassigned</option>
+          <option *ngFor="let t of teams" [ngValue]="t.id">{{ t.name }}</option>
+        </select>
+      </div>
+      <div class="apex-form-row">
+        <label>Authority limit (£)</label>
+        <input type="number" [(ngModel)]="userForm.authorityLimit">
+      </div>
+      <div class="apex-form-row" *ngIf="editingUserId">
+        <label>Active</label>
+        <select [(ngModel)]="userForm.isActive">
+          <option [ngValue]="true">Active</option>
+          <option [ngValue]="false">Inactive</option>
+        </select>
+      </div>
+    </div>
+    <div class="apex-btn-row">
+      <button type="button" class="apex-btn apex-btn--primary" [disabled]="userSaving" (click)="saveUser()">
+        {{ userSaving ? 'Saving…' : 'Save' }}
+      </button>
+      <button type="button" class="apex-btn apex-btn--ghost" (click)="cancelUserForm()">Cancel</button>
+    </div>
+  </div>
+
+  <apex-loading *ngIf="usersLoading" label="Loading users…"></apex-loading>
+  <div class="apex-alert apex-alert--danger" *ngIf="usersError && !usersLoading">{{ usersError }}</div>
+
+  <div class="apex-card" *ngIf="!usersLoading && !usersError">
+    <apex-empty-state *ngIf="filteredUsers.length === 0" title="No users found" message="Try a different search term."></apex-empty-state>
+    <div class="apex-table-wrap" *ngIf="filteredUsers.length > 0">
+      <table class="apex-table">
+        <thead>
+          <tr>
+            <th>Username</th><th>Full name</th><th>Email</th><th>Role</th><th>Team</th>
+            <th>Authority</th><th>Status</th><th *ngIf="canEdit">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let u of filteredUsers">
+            <td>{{ u.username }}</td>
+            <td>{{ u.fullName }}</td>
+            <td>{{ u.email }}</td>
+            <td>{{ u.role }}</td>
+            <td>{{ teamName(u.teamId) }}</td>
+            <td>£{{ u.authorityLimit | number:'1.0-0' }}</td>
+            <td>
+              <span class="apex-badge" [class.apex-badge--success]="u.isActive" [class.apex-badge--neutral]="!u.isActive">
+                {{ u.isActive ? 'Active' : 'Inactive' }}
+              </span>
+            </td>
+            <td *ngIf="canEdit">
+              <button type="button" class="apex-btn apex-btn--sm apex-btn--ghost" (click)="startEditUser(u)">Edit</button>
+              <button type="button" class="apex-btn apex-btn--sm apex-btn--ghost" *ngIf="u.isActive" (click)="deactivateUser(u)">Deactivate</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- RATE TABLES -->
+<div class="apex-tab-panel" *ngIf="activeTab === 'rateTables'">
+  <div class="apex-card apex-mb-16" *ngIf="canEdit">
+    <h3>{{ rateTableForm.id ? 'Edit rate table entry' : 'New rate table entry' }}</h3>
+    <div class="apex-alert apex-alert--danger" *ngIf="rateTableFormError">{{ rateTableFormError }}</div>
+    <div class="apex-form-grid">
+      <div class="apex-form-row">
+        <label>Line of business</label>
+        <select [(ngModel)]="rateTableForm.lineOfBusiness">
+          <option *ngFor="let l of lobOptions" [value]="l">{{ l }}</option>
+        </select>
+      </div>
+      <div class="apex-form-row">
+        <label>Trade</label>
+        <select [(ngModel)]="rateTableForm.tradeId">
+          <option [ngValue]="undefined">All trades</option>
+          <option *ngFor="let t of trades" [ngValue]="t.id">{{ t.name }}</option>
+        </select>
+      </div>
+      <div class="apex-form-row">
+        <label>Base rate per £1,000</label>
+        <input type="number" step="0.01" [(ngModel)]="rateTableForm.baseRatePer1000">
+      </div>
+      <div class="apex-form-row">
+        <label>Minimum premium (£)</label>
+        <input type="number" step="1" [(ngModel)]="rateTableForm.minPremium">
+      </div>
+      <div class="apex-form-row">
+        <label>Active</label>
+        <select [(ngModel)]="rateTableForm.isActive">
+          <option [ngValue]="true">Active</option>
+          <option [ngValue]="false">Inactive</option>
+        </select>
+      </div>
+    </div>
+    <div class="apex-btn-row">
+      <button type="button" class="apex-btn apex-btn--primary" [disabled]="rateTableSaving" (click)="saveRateTable()">
+        {{ rateTableSaving ? 'Saving…' : (rateTableForm.id ? 'Update' : 'Add') }}
+      </button>
+      <button type="button" class="apex-btn apex-btn--ghost" *ngIf="rateTableForm.id" (click)="cancelRateTableEdit()">Cancel</button>
+    </div>
+  </div>
+
+  <apex-loading *ngIf="rateTablesLoading" label="Loading rate tables…"></apex-loading>
+  <div class="apex-alert apex-alert--danger" *ngIf="rateTablesError && !rateTablesLoading">{{ rateTablesError }}</div>
+
+  <div class="apex-card" *ngIf="!rateTablesLoading && !rateTablesError">
+    <apex-empty-state *ngIf="rateTables.length === 0" title="No rate tables configured"></apex-empty-state>
+    <div class="apex-table-wrap" *ngIf="rateTables.length > 0">
+      <table class="apex-table">
+        <thead><tr><th>LOB</th><th>Trade</th><th>Base rate /£1,000</th><th>Min premium</th><th>Status</th><th *ngIf="canEdit">Actions</th></tr></thead>
+        <tbody>
+          <tr *ngFor="let r of rateTables">
+            <td>{{ r.lineOfBusiness }}</td>
+            <td>{{ r.tradeName || 'All trades' }}</td>
+            <td>{{ r.baseRatePer1000 | number:'1.2-2' }}</td>
+            <td>£{{ r.minPremium | number:'1.0-0' }}</td>
+            <td>
+              <span class="apex-badge" [class.apex-badge--success]="r.isActive" [class.apex-badge--neutral]="!r.isActive">
+                {{ r.isActive ? 'Active' : 'Inactive' }}
+              </span>
+            </td>
+            <td *ngIf="canEdit"><button type="button" class="apex-btn apex-btn--sm apex-btn--ghost" (click)="editRateTable(r)">Edit</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- REFERRAL RULES -->
+<div class="apex-tab-panel" *ngIf="activeTab === 'referralRules'">
+  <div class="apex-card apex-mb-16" *ngIf="canEdit">
+    <h3>{{ referralRuleForm.id ? 'Edit referral rule' : 'New referral rule' }}</h3>
+    <div class="apex-alert apex-alert--danger" *ngIf="referralRuleFormError">{{ referralRuleFormError }}</div>
+    <div class="apex-form-grid">
+      <div class="apex-form-row">
+        <label>Line of business</label>
+        <select [(ngModel)]="referralRuleForm.lineOfBusiness">
+          <option *ngFor="let l of lobOptions" [value]="l">{{ l }}</option>
+        </select>
+      </div>
+      <div class="apex-form-row">
+        <label>Trade</label>
+        <select [(ngModel)]="referralRuleForm.tradeId">
+          <option [ngValue]="undefined">Any trade</option>
+          <option *ngFor="let t of trades" [ngValue]="t.id">{{ t.name }}</option>
+        </select>
+      </div>
+      <div class="apex-form-row">
+        <label>Min sum insured (£)</label>
+        <input type="number" [(ngModel)]="referralRuleForm.minSumInsured">
+      </div>
+      <div class="apex-form-row">
+        <label>Max sum insured (£)</label>
+        <input type="number" [(ngModel)]="referralRuleForm.maxSumInsured">
+      </div>
+      <div class="apex-form-row">
+        <label>Min limit (£)</label>
+        <input type="number" [(ngModel)]="referralRuleForm.minLimit">
+      </div>
+      <div class="apex-form-row">
+        <label>Max limit (£)</label>
+        <input type="number" [(ngModel)]="referralRuleForm.maxLimit">
+      </div>
+      <div class="apex-form-row">
+        <label>Triggers on restricted trade</label>
+        <select [(ngModel)]="referralRuleForm.triggersOnRestrictedTrade">
+          <option [ngValue]="true">Yes</option>
+          <option [ngValue]="false">No</option>
+        </select>
+      </div>
+      <div class="apex-form-row apex-form-row--grow">
+        <label>Reason</label>
+        <input type="text" [(ngModel)]="referralRuleForm.reason" placeholder="Explain why this triggers a referral">
+      </div>
+      <div class="apex-form-row">
+        <label>Active</label>
+        <select [(ngModel)]="referralRuleForm.isActive">
+          <option [ngValue]="true">Active</option>
+          <option [ngValue]="false">Inactive</option>
+        </select>
+      </div>
+    </div>
+    <div class="apex-btn-row">
+      <button type="button" class="apex-btn apex-btn--primary" [disabled]="referralRuleSaving" (click)="saveReferralRule()">
+        {{ referralRuleSaving ? 'Saving…' : (referralRuleForm.id ? 'Update' : 'Add') }}
+      </button>
+      <button type="button" class="apex-btn apex-btn--ghost" *ngIf="referralRuleForm.id" (click)="cancelReferralRuleEdit()">Cancel</button>
+    </div>
+  </div>
+
+  <apex-loading *ngIf="referralRulesLoading" label="Loading referral rules…"></apex-loading>
+  <div class="apex-alert apex-alert--danger" *ngIf="referralRulesError && !referralRulesLoading">{{ referralRulesError }}</div>
+
+  <div class="apex-card" *ngIf="!referralRulesLoading && !referralRulesError">
+    <apex-empty-state *ngIf="referralRules.length === 0" title="No referral rules configured"></apex-empty-state>
+    <div class="apex-table-wrap" *ngIf="referralRules.length > 0">
+      <table class="apex-table">
+        <thead><tr><th>LOB</th><th>Trade</th><th>Sum insured range</th><th>Limit range</th><th>Restricted trade?</th><th>Reason</th><th>Status</th><th *ngIf="canEdit">Actions</th></tr></thead>
+        <tbody>
+          <tr *ngFor="let r of referralRules">
+            <td>{{ r.lineOfBusiness }}</td>
+            <td>{{ r.tradeName || 'Any' }}</td>
+            <td>
+              <ng-container *ngIf="r.minSumInsured || r.maxSumInsured">
+                £{{ r.minSumInsured | number:'1.0-0' }} – £{{ r.maxSumInsured | number:'1.0-0' }}
+              </ng-container>
+              <ng-container *ngIf="!r.minSumInsured && !r.maxSumInsured">—</ng-container>
+            </td>
+            <td>
+              <ng-container *ngIf="r.minLimit || r.maxLimit">
+                £{{ r.minLimit | number:'1.0-0' }} – £{{ r.maxLimit | number:'1.0-0' }}
+              </ng-container>
+              <ng-container *ngIf="!r.minLimit && !r.maxLimit">—</ng-container>
+            </td>
+            <td>{{ r.triggersOnRestrictedTrade ? 'Yes' : 'No' }}</td>
+            <td>{{ r.reason }}</td>
+            <td>
+              <span class="apex-badge" [class.apex-badge--success]="r.isActive" [class.apex-badge--neutral]="!r.isActive">
+                {{ r.isActive ? 'Active' : 'Inactive' }}
+              </span>
+            </td>
+            <td *ngIf="canEdit"><button type="button" class="apex-btn apex-btn--sm apex-btn--ghost" (click)="editReferralRule(r)">Edit</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- AUTHORITY RULES -->
+<div class="apex-tab-panel" *ngIf="activeTab === 'authorityRules'">
+  <div class="apex-card apex-mb-16" *ngIf="canEdit">
+    <h3>{{ authorityRuleForm.id ? 'Edit authority rule' : 'New authority rule' }}</h3>
+    <div class="apex-alert apex-alert--danger" *ngIf="authorityRuleFormError">{{ authorityRuleFormError }}</div>
+    <div class="apex-form-grid">
+      <div class="apex-form-row">
+        <label>Role</label>
+        <select [(ngModel)]="authorityRuleForm.role">
+          <option *ngFor="let r of authorityRoleOptions" [value]="r">{{ r }}</option>
+        </select>
+      </div>
+      <div class="apex-form-row">
+        <label>Line of business</label>
+        <select [(ngModel)]="authorityRuleForm.lineOfBusiness">
+          <option *ngFor="let l of lobOptions" [value]="l">{{ l }}</option>
+        </select>
+      </div>
+      <div class="apex-form-row">
+        <label>Max premium (£)</label>
+        <input type="number" [(ngModel)]="authorityRuleForm.maxPremium">
+      </div>
+      <div class="apex-form-row">
+        <label>Max sum insured (£)</label>
+        <input type="number" [(ngModel)]="authorityRuleForm.maxSumInsured">
+      </div>
+      <div class="apex-form-row">
+        <label>Max limit (£)</label>
+        <input type="number" [(ngModel)]="authorityRuleForm.maxLimit">
+      </div>
+      <div class="apex-form-row">
+        <label>Active</label>
+        <select [(ngModel)]="authorityRuleForm.isActive">
+          <option [ngValue]="true">Active</option>
+          <option [ngValue]="false">Inactive</option>
+        </select>
+      </div>
+    </div>
+    <div class="apex-btn-row">
+      <button type="button" class="apex-btn apex-btn--primary" [disabled]="authorityRuleSaving" (click)="saveAuthorityRule()">
+        {{ authorityRuleSaving ? 'Saving…' : (authorityRuleForm.id ? 'Update' : 'Add') }}
+      </button>
+      <button type="button" class="apex-btn apex-btn--ghost" *ngIf="authorityRuleForm.id" (click)="cancelAuthorityRuleEdit()">Cancel</button>
+    </div>
+  </div>
+
+  <apex-loading *ngIf="authorityRulesLoading" label="Loading authority rules…"></apex-loading>
+  <div class="apex-alert apex-alert--danger" *ngIf="authorityRulesError && !authorityRulesLoading">{{ authorityRulesError }}</div>
+
+  <div class="apex-card" *ngIf="!authorityRulesLoading && !authorityRulesError">
+    <apex-empty-state *ngIf="authorityRules.length === 0" title="No authority rules configured"></apex-empty-state>
+    <div class="apex-table-wrap" *ngIf="authorityRules.length > 0">
+      <table class="apex-table">
+        <thead>
+          <tr>
+            <th>Role</th><th>LOB</th><th>Max premium</th><th>Max sum insured</th><th>Max limit</th>
+            <th>Status</th><th *ngIf="canEdit">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let r of authorityRules">
+            <td>{{ r.role }}</td>
+            <td>{{ r.lineOfBusiness }}</td>
+            <td>£{{ r.maxPremium | number:'1.0-0' }}</td>
+            <td>£{{ r.maxSumInsured | number:'1.0-0' }}</td>
+            <td>£{{ r.maxLimit | number:'1.0-0' }}</td>
+            <td>
+              <span class="apex-badge" [class.apex-badge--success]="r.isActive" [class.apex-badge--neutral]="!r.isActive">
+                {{ r.isActive ? 'Active' : 'Inactive' }}
+              </span>
+            </td>
+            <td *ngIf="canEdit">
+              <button type="button" class="apex-btn apex-btn--sm apex-btn--ghost" (click)="editAuthorityRule(r)">Edit</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- PARAMETERS -->
+<div class="apex-tab-panel" *ngIf="activeTab === 'parameters'">
+  <apex-loading *ngIf="parametersLoading" label="Loading parameters…"></apex-loading>
+  <div class="apex-alert apex-alert--danger" *ngIf="parametersError && !parametersLoading">{{ parametersError }}</div>
+
+  <div class="apex-card" *ngIf="!parametersLoading && !parametersError">
+    <apex-empty-state *ngIf="parameters.length === 0" title="No system parameters found"></apex-empty-state>
+    <div class="apex-table-wrap" *ngIf="parameters.length > 0">
+      <table class="apex-table">
+        <thead><tr><th>Key</th><th>Value</th><th>Description</th><th *ngIf="canEdit">Actions</th></tr></thead>
+        <tbody>
+          <tr *ngFor="let p of parameters">
+            <td>{{ p.key }}</td>
+            <td>
+              <input type="text" *ngIf="editingParamKey === p.key" [(ngModel)]="paramEditValue">
+              <ng-container *ngIf="editingParamKey !== p.key">{{ p.value }}</ng-container>
+            </td>
+            <td>{{ p.description }}</td>
+            <td *ngIf="canEdit">
+              <ng-container *ngIf="editingParamKey === p.key">
+                <button type="button" class="apex-btn apex-btn--sm apex-btn--primary" [disabled]="paramSaving" (click)="saveParam(p)">Save</button>
+                <button type="button" class="apex-btn apex-btn--sm apex-btn--ghost" (click)="cancelEditParam()">Cancel</button>
+              </ng-container>
+              <button type="button" class="apex-btn apex-btn--sm apex-btn--ghost" *ngIf="editingParamKey !== p.key" (click)="startEditParam(p)">Edit</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- HOLIDAYS -->
+<div class="apex-tab-panel" *ngIf="activeTab === 'holidays'">
+  <div class="apex-card apex-mb-16" *ngIf="canEdit">
+    <h3>Add holiday</h3>
+    <div class="apex-alert apex-alert--danger" *ngIf="holidayFormError">{{ holidayFormError }}</div>
+    <div class="apex-form-grid">
+      <div class="apex-form-row">
+        <label>Date</label>
+        <input type="date" [(ngModel)]="holidayForm.holidayDate">
+      </div>
+      <div class="apex-form-row apex-form-row--grow">
+        <label>Description</label>
+        <input type="text" [(ngModel)]="holidayForm.description" placeholder="e.g. Christmas Day">
+      </div>
+      <div class="apex-form-row">
+        <label>Country</label>
+        <input type="text" [(ngModel)]="holidayForm.countryCode" maxlength="2" style="width: 60px;">
+      </div>
+    </div>
+    <div class="apex-btn-row">
+      <button type="button" class="apex-btn apex-btn--primary" [disabled]="holidaySaving" (click)="addHoliday()">
+        {{ holidaySaving ? 'Saving…' : 'Add holiday' }}
+      </button>
+    </div>
+  </div>
+
+  <apex-loading *ngIf="holidaysLoading" label="Loading holidays…"></apex-loading>
+  <div class="apex-alert apex-alert--danger" *ngIf="holidaysError && !holidaysLoading">{{ holidaysError }}</div>
+
+  <div class="apex-card" *ngIf="!holidaysLoading && !holidaysError">
+    <apex-empty-state *ngIf="holidays.length === 0" title="No holidays configured"></apex-empty-state>
+    <div class="apex-table-wrap" *ngIf="holidays.length > 0">
+      <table class="apex-table">
+        <thead><tr><th>Date</th><th>Description</th><th>Country</th></tr></thead>
+        <tbody>
+          <tr *ngFor="let h of holidays">
+            <td>{{ h.holidayDate | date:'dd MMM yyyy' }}</td>
+            <td>{{ h.description }}</td>
+            <td>{{ h.countryCode || '—' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,173 @@
+<div class="apex-pipeline-layout">
+    <aside class="apex-pipeline-rail">
+        <div class="apex-pipeline-rail__title">Shortcuts</div>
+        <button type="button" class="apex-pipeline-rail__item"
+                ng-repeat="b in vm.buckets | filter:{group:'shortcuts'}"
+                ng-class="{active: vm.bucket === b.key}"
+                ng-click="vm.selectBucket(b.key)">
+            <span>{{b.label}}</span>
+            <span class="apex-pipeline-rail__count">{{vm.countFor(b) > 99 ? '99+' : vm.countFor(b)}}</span>
+        </button>
+
+        <div class="apex-pipeline-rail__title apex-mt-16">Pipeline</div>
+        <button type="button" class="apex-pipeline-rail__item"
+                ng-repeat="b in vm.buckets | filter:{group:'pipeline'}"
+                ng-class="{active: vm.bucket === b.key}"
+                ng-click="vm.selectBucket(b.key)">
+            <span>{{b.label}}</span>
+            <span class="apex-pipeline-rail__count">{{vm.countFor(b) > 99 ? '99+' : vm.countFor(b)}}</span>
+        </button>
+
+        <div class="apex-pipeline-rail__title apex-mt-16">DA Pipeline</div>
+        <button type="button" class="apex-pipeline-rail__item"
+                ng-repeat="b in vm.buckets | filter:{group:'da'}"
+                ng-class="{active: vm.bucket === b.key}"
+                ng-click="vm.selectBucket(b.key)">
+            <span>{{b.label}}</span>
+            <span class="apex-pipeline-rail__count">{{vm.countFor(b) > 99 ? '99+' : vm.countFor(b)}}</span>
+        </button>
+
+        <div class="apex-pipeline-rail__title apex-mt-16">Quick links</div>
+        <a class="apex-pipeline-rail__link" ng-href="#!/submissions/new">+ New risk</a>
+        <a class="apex-pipeline-rail__link" ng-href="#!/inbox">Open tasks</a>
+        <a class="apex-pipeline-rail__link" href="" ng-click="vm.exportExcel()">Export to Excel</a>
+    </aside>
+
+    <div class="apex-pipeline-main">
+        <div class="apex-page-header apex-page-header--compact">
+            <div class="apex-page-header__title">
+                <h1>Pipeline — {{vm.bucket}}</h1>
+                <div class="apex-page-header__subtitle">UW workbench grid · column filters with operators</div>
+            </div>
+            <div class="apex-page-header__actions">
+                <a class="apex-btn apex-btn--danger apex-btn--sm" ng-href="#!/submissions/new">+ NEW RISK</a>
+            </div>
+        </div>
+
+        <form class="apex-pipe-toolbar" ng-submit="vm.applyFilters()">
+            <div class="apex-pipe-toolbar__row">
+                <div class="apex-pipe-field apex-pipe-field--search">
+                    <label for="pipe-search">Search</label>
+                    <input id="pipe-search" type="search" ng-model="vm.filters.search"
+                           placeholder="Account, reference, broker…">
+                </div>
+                <div class="apex-pipe-field apex-pipe-field--area">
+                    <label for="pipe-area">Business Area</label>
+                    <select id="pipe-area" ng-model="vm.filters.businessArea">
+                        <option value="">All areas</option>
+                        <option ng-repeat="o in vm.areaOptions" value="{{o.value}}">{{o.label}}</option>
+                    </select>
+                </div>
+                <div class="apex-pipe-field apex-pipe-field--days">
+                    <label for="pipe-from">Date from (days)</label>
+                    <input id="pipe-from" type="number" ng-model="vm.filters.dateFromDays">
+                </div>
+                <div class="apex-pipe-field apex-pipe-field--days">
+                    <label for="pipe-to">Date to (days)</label>
+                    <input id="pipe-to" type="number" ng-model="vm.filters.dateToDays">
+                </div>
+                <div class="apex-pipe-field apex-pipe-field--actions">
+                    <label class="apex-pipe-field__spacer">&nbsp;</label>
+                    <div class="apex-pipe-actions">
+                        <button type="submit" class="apex-btn apex-btn--sm apex-btn--primary">Apply</button>
+                        <button type="button" class="apex-btn apex-btn--sm apex-btn--ghost" ng-click="vm.saveProfile()">Save Profile</button>
+                        <button type="button" class="apex-btn apex-btn--sm apex-btn--ghost" ng-click="vm.toggleGridDisplay()">Grid Display</button>
+                        <button type="button" class="apex-btn apex-btn--sm apex-btn--ghost" ng-click="vm.clearColumnFilters()" title="Clear AG Grid column filters">Clear col filters</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="apex-pipe-toolbar__row apex-pipe-toolbar__row--secondary">
+                <div class="apex-pipe-toggles">
+                    <label class="apex-pipe-toggle">
+                        <input type="checkbox" ng-model="vm.filters.expiringRenewalsOnly">
+                        Expiring live renewals only
+                    </label>
+                    <label class="apex-pipe-toggle">
+                        <input type="checkbox" ng-model="vm.filters.showNonRenewable">
+                        Show non renewable
+                    </label>
+                </div>
+            </div>
+        </form>
+
+        <div class="apex-alert apex-alert--info" ng-if="vm.profileSaved">Filter profile saved locally.</div>
+
+        <div class="apex-pipe-cols" ng-if="vm.showGridDisplay">
+            <strong>Grid Display</strong>
+            <div class="apex-pipe-chips apex-pipe-chips--cols">
+                <label class="apex-pipe-chip" ng-repeat="c in vm.columnOptions"
+                       ng-class="{active: vm.columnVisibility[c.key]}">
+                    <input type="checkbox" ng-model="vm.columnVisibility[c.key]" ng-change="vm.syncColumnVisibility()">
+                    {{c.label}}
+                </label>
+            </div>
+        </div>
+
+        <div class="apex-card" ng-if="vm.bucket === 'queries'" style="margin-bottom:12px">
+            <div class="apex-card__header"><h3>+ New Query</h3></div>
+            <div class="apex-alert apex-alert--danger" ng-if="vm.queryError">{{vm.queryError}}</div>
+            <div class="apex-alert apex-alert--success" ng-if="vm.querySuccess">{{vm.querySuccess}}</div>
+            <form ng-submit="vm.createQuery()">
+                <div class="apex-form-grid">
+                    <div class="apex-form-row">
+                        <label>Risk</label>
+                        <select ng-model="vm.queryForm.submissionId"
+                                ng-options="r.submissionId as (r.accountName + ' · ' + r.reference) for r in vm.submissionsForQuery">
+                            <option value="">Select…</option>
+                        </select>
+                    </div>
+                    <div class="apex-form-row">
+                        <label>Type</label>
+                        <select ng-model="vm.queryForm.queryType">
+                            <option>Clarification</option>
+                            <option>Data Entry</option>
+                            <option>Wording</option>
+                            <option>Referral</option>
+                        </select>
+                    </div>
+                    <div class="apex-form-row">
+                        <label>Assigned To</label>
+                        <select ng-model="vm.queryForm.assignedToUserId"
+                                ng-options="u.id as (u.fullName || u.username) for u in vm.users">
+                            <option value="">Select…</option>
+                        </select>
+                    </div>
+                    <div class="apex-form-row">
+                        <label>Priority</label>
+                        <select ng-model="vm.queryForm.priority">
+                            <option>Low</option>
+                            <option>Normal</option>
+                            <option>High</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="apex-form-row">
+                    <label>Query body</label>
+                    <textarea ng-model="vm.queryForm.body" rows="3" placeholder="Ops ↔ UW clarification…"></textarea>
+                </div>
+                <button type="submit" class="apex-btn apex-btn--primary apex-btn--sm" ng-disabled="vm.queryBusy">
+                    {{vm.queryBusy ? 'Saving…' : 'Create Query'}}
+                </button>
+            </form>
+        </div>
+
+        <div class="apex-loading" ng-if="vm.loading">
+            <span class="apex-spinner"></span> Loading pipeline…
+        </div>
+        <div class="apex-alert apex-alert--danger" ng-if="vm.error && !vm.loading">{{vm.error}}</div>
+
+        <div class="apex-pipe-grid-meta" ng-if="!vm.loading">
+            <span>{{vm.filteredCount}} row{{vm.filteredCount === 1 ? '' : 's'}} (paged)</span>
+            <span class="apex-text-muted">Column header filters support operators · use the pager below the grid</span>
+        </div>
+
+        <div id="apex-pipeline-grid"
+             class="ag-theme-alpine apex-pipe-grid"
+             ng-if="!vm.loading && !vm.error && vm.rows.length > 0"></div>
+
+        <apex-empty-state ng-if="!vm.loading && !vm.error && vm.rows.length === 0"
+                           title="'Nothing in this bucket'"
+                           message="'Try another pipeline lane or clear filters.'"></apex-empty-state>
+    </div>
+</div>

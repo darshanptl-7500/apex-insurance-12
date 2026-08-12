@@ -1,0 +1,49 @@
+<div class="apex-page-header">
+    <div class="apex-page-header__title">
+        <h1>Connect</h1>
+        <div class="apex-page-header__subtitle">Brokers and insured contacts used across the workbench.</div>
+    </div>
+</div>
+
+<div class="apex-tabs">
+    <div class="apex-tabs__tab" ng-class="{active: vm.tab === 'brokers'}" ng-click="vm.setTab('brokers')">Brokers</div>
+    <div class="apex-tabs__tab" ng-class="{active: vm.tab === 'insureds'}" ng-click="vm.setTab('insureds')">Clients / Insureds</div>
+</div>
+
+<div class="apex-loading" ng-if="vm.loading"><span class="apex-spinner"></span> Loading contacts…</div>
+<div class="apex-alert apex-alert--danger" ng-if="vm.error && !vm.loading">{{vm.error}}</div>
+
+<div class="apex-card" ng-if="!vm.loading && vm.tab === 'brokers'">
+    <div class="apex-card__header">
+        <h3>Brokers</h3>
+        <a class="apex-btn apex-btn--sm" ng-href="#!/brokers">Open full brokers</a>
+    </div>
+    <table class="apex-table apex-table--dense" ng-if="vm.brokers.length">
+        <thead><tr><th>Code</th><th>Name</th><th>Status</th></tr></thead>
+        <tbody>
+        <tr class="clickable" ng-repeat="b in vm.brokers" ng-click="null">
+            <td class="apex-mono"><a class="apex-table__link" ng-href="#!/brokers/{{b.id}}">{{b.brokerCode || b.code || b.id}}</a></td>
+            <td>{{b.name}}</td>
+            <td>{{b.isActive === false ? 'Inactive' : 'Active'}}</td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<div class="apex-card" ng-if="!vm.loading && vm.tab === 'insureds'">
+    <div class="apex-card__header"><h3>Insureds</h3></div>
+    <apex-empty-state ng-if="vm.insureds.length === 0"
+                       title="'No insureds returned'"
+                       message="'Insured directory is read from the CRM-lite API.'"></apex-empty-state>
+    <table class="apex-table apex-table--dense" ng-if="vm.insureds.length">
+        <thead><tr><th>Name</th><th>City</th><th>Postcode</th><th>Trade</th></tr></thead>
+        <tbody>
+        <tr ng-repeat="i in vm.insureds">
+            <td>{{i.name}}</td>
+            <td>{{i.city || '—'}}</td>
+            <td>{{i.postCode || i.postcode || '—'}}</td>
+            <td>{{i.tradeName || i.tradeId || '—'}}</td>
+        </tr>
+        </tbody>
+    </table>
+</div>

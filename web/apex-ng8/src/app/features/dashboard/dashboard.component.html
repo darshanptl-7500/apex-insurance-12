@@ -1,0 +1,155 @@
+<div class="mi-page">
+  <div class="apex-page-header">
+    <div class="apex-page-header__title">
+      <h1>Underwriting Dashboard</h1>
+      <div class="apex-page-header__subtitle">
+        Live queues · production vs target · broker MI · workbench pulse
+      </div>
+    </div>
+    <div class="apex-page-header__actions mi-period">
+      <div class="mi-period__pills">
+        <button type="button" class="mi-pill" [class.active]="period==='mtd'" (click)="applyPeriod('mtd')">MTD</button>
+        <button type="button" class="mi-pill" [class.active]="period==='qtd'" (click)="applyPeriod('qtd')">QTD</button>
+        <button type="button" class="mi-pill" [class.active]="period==='ytd'" (click)="applyPeriod('ytd')">YTD</button>
+        <button type="button" class="mi-pill" [class.active]="period==='12m'" (click)="applyPeriod('12m')">12M</button>
+      </div>
+      <button type="button" class="apex-btn apex-btn--ghost apex-btn--sm" (click)="load()">Refresh</button>
+    </div>
+  </div>
+
+  <apex-loading *ngIf="loading" label="Building dashboard…"></apex-loading>
+  <div class="apex-alert apex-alert--danger" *ngIf="error && !loading">{{ error }}</div>
+
+  <div class="mi-layout" *ngIf="!loading && !error && summary">
+    <div class="mi-main">
+      <!-- Hero KPI strip -->
+      <div class="mi-hero">
+        <div class="mi-gauge-card">
+          <svg class="mi-gauge" viewBox="0 0 100 100" aria-hidden="true">
+            <circle cx="50" cy="50" r="42" class="mi-gauge__track"></circle>
+            <circle cx="50" cy="50" r="42" class="mi-gauge__value"
+                    [attr.stroke-dasharray]="gaugeDash"
+                    transform="rotate(-90 50 50)"></circle>
+            <text x="50" y="48" text-anchor="middle" class="mi-gauge__pct">{{ targetPct | number:'1.0-1' }}%</text>
+            <text x="50" y="62" text-anchor="middle" class="mi-gauge__cap">of target</text>
+          </svg>
+          <div class="mi-gauge-card__meta">
+            <div class="mi-gauge-card__label">Premium written</div>
+            <div class="mi-gauge-card__value">{{ kpis.premiumWritten | currency:'GBP':'symbol':'1.0-0' }}</div>
+            <div class="mi-gauge-card__sub">Target {{ kpis.premiumTarget | currency:'GBP':'symbol':'1.0-0' }} · {{ fromDate }} → {{ toDate }}</div>
+          </div>
+        </div>
+
+        <div class="mi-kpi-grid">
+          <div class="mi-kpi">
+            <div class="mi-kpi__label">Hit ratio</div>
+            <div class="mi-kpi__value">{{ kpis.hitRatio | number:'1.0-1' }}%</div>
+            <div class="mi-kpi__bar"><span [style.width]="kpis.hitRatio + '%'"></span></div>
+          </div>
+          <div class="mi-kpi">
+            <div class="mi-kpi__label">Avg turnaround</div>
+            <div class="mi-kpi__value">{{ kpis.averageTurnaroundDays | number:'1.0-1' }}<small>d</small></div>
+            <div class="mi-kpi__sub">Quote / bind cycle</div>
+          </div>
+          <div class="mi-kpi">
+            <div class="mi-kpi__label">Bound</div>
+            <div class="mi-kpi__value mi-kpi__value--ok">{{ kpis.boundCount }}</div>
+            <div class="mi-kpi__sub">{{ kpis.declinedCount }} declined / NTU</div>
+          </div>
+          <div class="mi-kpi" *ngIf="concentration">
+            <div class="mi-kpi__label">Portfolio SI</div>
+            <div class="mi-kpi__value">{{ concentration.totalSumInsured | currency:'GBP':'symbol':'1.0-0' }}</div>
+            <div class="mi-kpi__sub">Top LOB {{ concentration.topLob || '—' }} · {{ concentration.topLobSharePercent | number:'1.0-0' }}%</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Workbench pulse -->
+      <div class="mi-section-title">Workbench pulse</div>
+      <div class="mi-pulse">
+        <a class="mi-pulse__tile" *ngFor="let t of pulseTiles" [href]="t.href" [ngClass]="'mi-pulse__tile--' + t.tone">
+          <span class="mi-pulse__count">{{ t.count > 99 ? '99+' : t.count }}</span>
+          <span class="mi-pulse__label">{{ t.label }}</span>
+        </a>
+      </div>
+
+      <!-- Premium trajectory -->
+      <div class="apex-card mi-card">
+        <div class="apex-card__header">
+          <h3>Premium vs target</h3>
+          <a class="apex-btn apex-btn--ghost apex-btn--sm" href="/ng8/reporting">Open Reporting</a>
+        </div>
+        <div class="mi-legend">
+          <span><i class="mi-swatch mi-swatch--written"></i> Written</span>
+          <span><i class="mi-swatch mi-swatch--target"></i> Target</span>
+        </div>
+        <div class="mi-dual-chart" *ngIf="recentTrend.length">
+          <div class="mi-dual-col" *ngFor="let r of recentTrend">
+            <div class="mi-dual-col__bars">
+              <div class="mi-dual-col__bar mi-dual-col__bar--target" [style.height]="trendTargetHeight(r)" title="Target"></div>
+              <div class="mi-dual-col__bar mi-dual-col__bar--written" [style.height]="trendWrittenHeight(r)" title="Written"></div>
+            </div>
+            <div class="mi-dual-col__label">{{ r.periodLabel }}</div>
+          </div>
+        </div>
+        <apex-empty-state *ngIf="!recentTrend.length" title="No premium series"
+                           message="Premium vs target will appear once bound policies exist in range."></apex-empty-state>
+      </div>
+
+      <!-- Broker production -->
+      <div class="apex-card mi-card">
+        <div class="apex-card__header"><h3>Broker production</h3></div>
+        <apex-empty-state *ngIf="!topBrokers.length" title="No broker activity"
+                           message="Broker GWP appears after submissions are received."></apex-empty-state>
+        <div *ngIf="topBrokers.length">
+          <div class="mi-rank-row" *ngFor="let b of topBrokers; let i = index">
+            <div class="mi-rank" [ngClass]="{'mi-rank--gold': i===0, 'mi-rank--silver': i===1, 'mi-rank--bronze': i===2}">{{ i + 1 }}</div>
+            <div class="mi-rank-row__body">
+              <div class="mi-rank-row__top">
+                <strong>{{ b.brokerName }}</strong>
+                <span>{{ b.grossWrittenPremium | currency:'GBP':'symbol':'1.0-0' }}</span>
+              </div>
+              <div class="mi-rank-row__track"><span [style.width]="brokerBarWidth(b)"></span></div>
+              <div class="mi-rank-row__meta">
+                {{ b.submissionCount }} subs · {{ b.quoteCount }} quotes · {{ b.boundCount }} bound · hit {{ b.hitRatio | number:'1.0-0' }}%
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right rail from top — Quick links first so always above the fold -->
+    <aside class="mi-side">
+      <div class="apex-card mi-card mi-actions">
+        <div class="apex-card__header"><h3>Quick links</h3></div>
+        <a class="apex-btn apex-btn--sm" [href]="auth.shellUrl('/pipeline/upcoming')">Pipeline</a>
+        <a class="apex-btn apex-btn--sm" [href]="auth.shellUrl('/inbox')">Tasks</a>
+        <a class="apex-btn apex-btn--sm" href="/ng8/case-hub">Underwriter's File</a>
+        <a class="apex-btn apex-btn--sm" href="/ng8/reporting">Reporting &amp; MI</a>
+        <a class="apex-btn apex-btn--sm apex-btn--danger" [href]="auth.shellUrl('/submissions/new')">+ New risk</a>
+      </div>
+
+      <div class="apex-card mi-card">
+        <div class="apex-card__header"><h3>Needs attention</h3></div>
+        <a class="mi-attn" *ngFor="let a of attentionItems" [href]="a.href" [ngClass]="'mi-attn--' + a.tone">
+          <strong>{{ a.label }}</strong>
+          <span>{{ a.detail }}</span>
+        </a>
+      </div>
+
+      <div class="apex-card mi-card">
+        <div class="apex-card__header"><h3>UW queues</h3></div>
+        <div class="mi-queue" *ngFor="let q of queueTiles">
+          <a class="mi-queue__head" [href]="q.href">
+            <span>{{ q.label }}</span>
+            <strong [ngClass]="'mi-queue__count--' + q.tone">{{ q.count }}</strong>
+          </a>
+          <div class="mi-queue__track">
+            <span [style.width]="queueBarWidth(q)" [ngClass]="'mi-queue__fill--' + q.tone"></span>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>

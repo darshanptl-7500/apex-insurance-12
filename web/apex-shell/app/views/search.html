@@ -1,0 +1,218 @@
+<div class="apex-search-page">
+    <div class="apex-search-tabs">
+        <button type="button" class="apex-search-tabs__item"
+                ng-class="{active: vm.mode === 'policy'}"
+                ng-click="vm.setMode('policy')">Policy Search</button>
+        <button type="button" class="apex-search-tabs__item"
+                ng-class="{active: vm.mode === 'saved'}"
+                ng-click="vm.setMode('saved')">Saved Searches</button>
+        <button type="button" class="apex-search-tabs__item"
+                ng-class="{active: vm.mode === 'query'}"
+                ng-click="vm.setMode('query')">Query Search</button>
+        <button type="button" class="apex-search-tabs__item"
+                ng-class="{active: vm.mode === 'vessel'}"
+                ng-click="vm.setMode('vessel')">Vessel Search</button>
+    </div>
+
+    <!-- Policy Search -->
+    <div ng-if="vm.mode === 'policy'">
+        <div class="apex-panel-red">
+            <span>Select criteria to search for policies</span>
+            <button type="button" class="apex-panel-red__close" ng-click="vm.reset()" title="Clear">×</button>
+        </div>
+
+        <div class="apex-card apex-card--flush">
+            <div class="apex-search-criteria">
+                <div class="apex-search-row apex-search-row--uw" ng-repeat="row in vm.criteria">
+                    <select class="apex-search-row__op" ng-if="!$first" ng-model="row.join"
+                            title="Join with previous row">
+                        <option value="and">And</option>
+                        <option value="or">Or</option>
+                    </select>
+                    <span class="apex-text-muted" ng-if="$first" style="width:52px;display:inline-block"></span>
+                    <select class="apex-search-row__field"
+                            ng-model="row.field"
+                            ng-options="o.value as o.label for o in vm.fieldOptions"
+                            ng-change="vm.onFieldChange(row)"></select>
+                    <select class="apex-search-row__op"
+                            ng-model="row.operator"
+                            ng-options="o.value as o.label for o in vm.operatorsFor(row)"></select>
+                    <input ng-if="!vm.isDateField(row.field) && !vm.isBetween(row) && !vm.isSelectField(row.field)"
+                           type="text" class="apex-search-row__value"
+                           ng-model="row.value" placeholder="Value">
+                    <input ng-if="vm.isDateField(row.field) && !vm.isBetween(row)"
+                           type="date" class="apex-search-row__value"
+                           ng-model="row.value">
+                    <select ng-if="vm.isSelectField(row.field) && !vm.isBetween(row)"
+                            class="apex-search-row__value"
+                            ng-model="row.value"
+                            ng-options="o.value as o.label for o in vm.selectOptions(row.field)">
+                        <option value="">Please select</option>
+                    </select>
+                    <span ng-if="vm.isBetween(row)" class="apex-search-row__between">
+                        <input ng-if="!vm.isDateField(row.field)" type="text" ng-model="row.value" placeholder="From">
+                        <input ng-if="vm.isDateField(row.field)" type="date" ng-model="row.value">
+                        <span>and</span>
+                        <input ng-if="!vm.isDateField(row.field)" type="text" ng-model="row.valueTo" placeholder="To">
+                        <input ng-if="vm.isDateField(row.field)" type="date" ng-model="row.valueTo">
+                    </span>
+                    <button type="button" class="apex-btn apex-btn--ghost apex-btn--sm"
+                            ng-click="vm.removeRow($index)" title="Remove row">×</button>
+                </div>
+            </div>
+
+            <div class="apex-search-actions">
+                <button type="button" class="apex-btn apex-btn--ghost apex-btn--sm" ng-click="vm.addRow()">+ Add Row</button>
+                <div class="apex-search-actions__right">
+                    <button type="button" class="apex-btn apex-btn--ghost apex-btn--sm" ng-click="vm.saveSearch(false)">Save</button>
+                    <button type="button" class="apex-btn apex-btn--primary apex-btn--sm"
+                            ng-click="vm.saveSearch(true)" ng-disabled="vm.loading">Save and Search</button>
+                    <button type="button" class="apex-btn apex-btn--danger apex-btn--sm"
+                            ng-click="vm.search()" ng-disabled="vm.loading">
+                        {{vm.loading ? 'Searching…' : 'Search'}}
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="apex-alert apex-alert--danger" ng-if="vm.error">{{vm.error}}</div>
+        <div class="apex-alert apex-alert--info" ng-if="vm.info">{{vm.info}}</div>
+        <div class="apex-loading" ng-if="vm.loading">
+            <span class="apex-spinner"></span> Searching submissions and policies…
+        </div>
+
+        <div class="apex-card" ng-if="vm.searched && !vm.loading">
+            <div class="apex-panel-red apex-panel-red--sm">
+                <span>Search results ({{vm.results.length}})</span>
+                <span class="apex-panel-red__meta">Leave criteria blank and Search to list all</span>
+            </div>
+            <apex-empty-state ng-if="vm.results.length === 0"
+                               title="'No matches'"
+                               message="'Widen criteria or clear values and Search again.'"></apex-empty-state>
+            <div class="apex-table-wrap" ng-if="vm.results.length > 0">
+                <table class="apex-table apex-table--dense apex-table--pipeline apex-table--search">
+                    <thead>
+                    <tr>
+                        <th>Reference</th>
+                        <th>Account Name</th>
+                        <th>Area</th>
+                        <th>Policy Description</th>
+                        <th>Inception</th>
+                        <th>Expiry</th>
+                        <th>Status</th>
+                        <th>Gross</th>
+                        <th>Net</th>
+                        <th>Broker</th>
+                        <th>Broker Contact</th>
+                        <th>UW</th>
+                        <th>Exposure</th>
+                        <th>Kind</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr class="clickable" ng-repeat="r in vm.results" ng-click="vm.open(r)">
+                        <td class="apex-mono apex-table__link">{{r.reference}}</td>
+                        <td>{{r.accountName || '—'}}</td>
+                        <td>{{r.lineOfBusiness || '—'}}</td>
+                        <td class="apex-ellipsis" title="{{r.description}}">{{r.description || '—'}}</td>
+                        <td>{{r.inception | date:'dd/MM/yyyy'}}</td>
+                        <td>{{r.expiry | date:'dd/MM/yyyy'}}</td>
+                        <td>{{r.status}}</td>
+                        <td>{{r.grossPremium != null ? (r.grossPremium | currency:'£':0) : '—'}}</td>
+                        <td>{{r.netPremium != null ? (r.netPremium | currency:'£':0) : '—'}}</td>
+                        <td>{{r.brokerName || '—'}}</td>
+                        <td class="apex-ellipsis">{{r.brokerContact || '—'}}</td>
+                        <td>{{r.underwriterName || '—'}}</td>
+                        <td>{{r.exposure != null ? (r.exposure | currency:'£':0) : '—'}}</td>
+                        <td>{{r.kind}}</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Saved Searches -->
+    <div ng-if="vm.mode === 'saved'">
+        <div class="apex-panel-red"><span>Saved Searches</span></div>
+        <div class="apex-card">
+            <apex-empty-state ng-if="vm.savedSearches.length === 0"
+                               title="'No saved searches'"
+                               message="'Use Save on Policy Search to store a criteria set.'"></apex-empty-state>
+            <table class="apex-table apex-table--dense" ng-if="vm.savedSearches.length > 0">
+                <thead>
+                <tr><th>Name</th><th>Criteria</th><th>Saved</th><th></th></tr>
+                </thead>
+                <tbody>
+                <tr ng-repeat="s in vm.savedSearches">
+                    <td class="apex-table__link" ng-click="vm.loadSaved(s)">{{s.name}}</td>
+                    <td>{{s.criteria.length}} row(s)</td>
+                    <td>{{s.savedAt | date:'dd MMM yyyy HH:mm'}}</td>
+                    <td>
+                        <button type="button" class="apex-btn apex-btn--sm" ng-click="vm.loadSaved(s)">Open</button>
+                        <button type="button" class="apex-btn apex-btn--ghost apex-btn--sm" ng-click="vm.deleteSaved($index)">Delete</button>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Query Search -->
+    <div ng-if="vm.mode === 'query'">
+        <div class="apex-panel-red"><span>Query Search</span></div>
+        <div class="apex-card">
+            <form class="apex-filter-bar apex-filter-bar--dense" ng-submit="vm.searchQueries()">
+                <div class="apex-form-row">
+                    <label>Assigned to / title</label>
+                    <input type="search" ng-model="vm.queryFilter" placeholder="Filter open queries…">
+                </div>
+                <div class="apex-form-row">
+                    <button type="submit" class="apex-btn apex-btn--sm apex-btn--primary">Search</button>
+                </div>
+            </form>
+            <div class="apex-loading" ng-if="vm.queryLoading"><span class="apex-spinner"></span> Loading queries…</div>
+            <table class="apex-table apex-table--dense" ng-if="!vm.queryLoading && vm.queryResults.length > 0">
+                <thead>
+                <tr>
+                    <th>Reference</th><th>Account</th><th>Title</th><th>Assigned</th>
+                    <th>Status</th><th>Created</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr class="clickable" ng-repeat="q in vm.queryResults" ng-click="vm.openQuery(q)">
+                    <td class="apex-mono apex-table__link">{{q.reference}}</td>
+                    <td>{{q.accountName || '—'}}</td>
+                    <td>{{q.description || '—'}}</td>
+                    <td>{{q.underwriterName || '—'}}</td>
+                    <td>{{q.status}}</td>
+                    <td>{{q.inception | date:'dd MMM yyyy'}}</td>
+                </tr>
+                </tbody>
+            </table>
+            <apex-empty-state ng-if="!vm.queryLoading && vm.queryResults.length === 0"
+                               title="'No open queries'"
+                               message="'Queries appear when workflow tasks are outstanding.'"></apex-empty-state>
+        </div>
+    </div>
+
+    <!-- Vessel Search (stub — marine not in Apex LOB set) -->
+    <div ng-if="vm.mode === 'vessel'">
+        <div class="apex-panel-red"><span>Select criteria to search for Vessel</span></div>
+        <div class="apex-card">
+            <p class="apex-muted">
+                Vessel Search is shown for UW parity. Apex demo LOBs are commercial SME
+                (Property / Liability / PI) — vessel criteria (GT, DWT, Year of Build) are stubbed.
+            </p>
+            <div class="apex-search-row apex-search-row--uw" ng-repeat="row in vm.vesselCriteria">
+                <select ng-model="row.field" ng-options="o.value as o.label for o in vm.vesselFields"></select>
+                <select ng-model="row.operator" ng-options="o.value as o.label for o in vm.operatorOptions"></select>
+                <input type="text" ng-model="row.value" placeholder="Please select / value" disabled>
+            </div>
+            <div class="apex-search-actions">
+                <button type="button" class="apex-btn apex-btn--ghost apex-btn--sm" disabled>+ Add Row</button>
+                <button type="button" class="apex-btn apex-btn--primary apex-btn--sm" disabled>Search</button>
+            </div>
+        </div>
+    </div>
+</div>

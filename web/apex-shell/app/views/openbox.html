@@ -1,0 +1,164 @@
+<div class="apex-page-header">
+    <div class="apex-page-header__title">
+        <h1>Open Box</h1>
+        <div class="apex-page-header__subtitle">
+            Policy administration portal (lab mirror) · risk register · integration bus
+        </div>
+    </div>
+    <div class="apex-page-header__actions">
+        <button type="button" class="apex-btn apex-btn--ghost apex-btn--sm" ng-click="vm.reload()" ng-disabled="vm.loading">Refresh</button>
+        <a class="apex-btn apex-btn--sm" ng-href="#!/support">Support health</a>
+    </div>
+</div>
+
+<div class="obx-status" ng-if="vm.status">
+    <div class="obx-status__tile">
+        <div class="obx-status__label">Gateway</div>
+        <div class="obx-status__value">{{vm.status.gateway}}</div>
+        <div class="apex-text-muted">{{vm.status.gatewayAvailable ? 'Available' : 'Unavailable'}} · {{vm.status.riskCount}} risks · {{vm.status.policyCount}} policies</div>
+    </div>
+    <div class="obx-status__tile" ng-class="{'obx-status__tile--ok': vm.status.bus.connected, 'obx-status__tile--warn': !vm.status.bus.connected || (vm.status.bus.mode|lowercase).indexOf('fallback')>=0}">
+        <div class="obx-status__label">Integration bus</div>
+        <div class="obx-status__value">{{vm.status.bus.mode}}</div>
+        <div class="apex-text-muted">{{vm.status.bus.message}}</div>
+        <div class="apex-mono apex-text-muted">{{vm.status.bus.endpoint}}</div>
+    </div>
+</div>
+
+<div class="apex-alert apex-alert--info">
+    Open Box remains the golden source for policy data. Workbench writes call this portal’s gateway;
+    events publish to RabbitMQ when enabled (<code>Apex:RabbitMQ:Enabled=true</code>), otherwise an in-memory bus.
+</div>
+
+<div class="obx-layout">
+    <div class="obx-main">
+        <div class="apex-card">
+            <div class="apex-card__header">
+                <h3>Risk register</h3>
+                <form class="obx-search" ng-submit="vm.loadRisks()">
+                    <input type="search" ng-model="vm.search" placeholder="UW ref, account, UMR, broker…">
+                    <button type="submit" class="apex-btn apex-btn--sm apex-btn--primary">Search</button>
+                </form>
+            </div>
+            <div class="apex-loading" ng-if="vm.loading"><span class="apex-spinner"></span> Loading Open Box risks…</div>
+            <div class="apex-alert apex-alert--danger" ng-if="vm.error && !vm.loading">{{vm.error}}</div>
+            <apex-empty-state ng-if="!vm.loading && !vm.risks.length"
+                               title="'No risks in Open Box mirror'"
+                               message="'Create a risk from + NEW RISK — CreateRisk posts through the Open Box gateway.'"></apex-empty-state>
+            <div class="apex-table-wrap" ng-if="!vm.loading && vm.risks.length">
+                <table class="apex-table apex-table--dense">
+                    <thead>
+                    <tr>
+                        <th>UW Reference</th>
+                        <th>Account</th>
+                        <th>UMR</th>
+                        <th>YOA</th>
+                        <th>Area</th>
+                        <th>Status</th>
+                        <th>Broker</th>
+                        <th>MOP</th>
+                        <th>Touched</th>
+                        <th></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr ng-repeat="r in vm.risks" ng-class="{active: vm.selected && vm.selected.submissionId === r.submissionId}"
+                        class="clickable" ng-click="vm.select(r)">
+                        <td class="apex-mono apex-table__link">{{r.uwReference}}</td>
+                        <td>{{r.accountName || '—'}}</td>
+                        <td class="apex-mono">{{r.umr || '—'}}</td>
+                        <td>{{r.yoa || '—'}}</td>
+                        <td>{{r.businessArea || '—'}}</td>
+                        <td>{{r.status || '—'}}</td>
+                        <td>{{r.brokerName || '—'}}</td>
+                        <td>{{r.mop || '—'}}</td>
+                        <td>{{r.lastTouchedUtc | date:'dd MMM HH:mm'}}</td>
+                        <td>
+                            <a class="apex-btn apex-btn--ghost apex-btn--sm"
+                               ng-href="/ng8/case-hub/{{r.submissionId}}"
+                               ng-click="$event.stopPropagation()">UW File</a>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="apex-card" ng-if="vm.selected">
+            <div class="apex-card__header"><h3>Risk detail — {{vm.selected.uwReference}}</h3></div>
+            <div class="obx-detail">
+                <div class="apex-kv"><dt>Account</dt><dd>{{vm.selected.accountName || '—'}}</dd></div>
+                <div class="apex-kv"><dt>UMR</dt><dd class="apex-mono">{{vm.selected.umr || '—'}}</dd></div>
+                <div class="apex-kv"><dt>Policy type</dt><dd>{{vm.selected.policyType || '—'}}</dd></div>
+                <div class="apex-kv"><dt>Description</dt><dd>{{vm.selected.policyDescription || '—'}}</dd></div>
+                <div class="apex-kv"><dt>Prem / Rate</dt><dd>{{vm.selected.premRate != null ? vm.selected.premRate : '—'}}</dd></div>
+                <div class="apex-kv"><dt>Technical Index</dt><dd>{{vm.selected.technicalIndex != null ? vm.selected.technicalIndex : '—'}}</dd></div>
+                <div class="apex-kv"><dt>Modelled LR</dt><dd>{{vm.selected.modelledLr != null ? vm.selected.modelledLr : '—'}}</dd></div>
+                <div class="apex-kv"><dt>Principal UW</dt><dd>{{vm.selected.principalUw || '—'}}</dd></div>
+            </div>
+        </div>
+    </div>
+
+    <aside class="obx-side">
+        <div class="apex-card">
+            <div class="apex-card__header">
+                <h3>Bus messages</h3>
+                <button type="button" class="apex-btn apex-btn--ghost apex-btn--sm" ng-click="vm.loadMessages()">Refresh</button>
+            </div>
+            <apex-empty-state ng-if="!vm.messages.length"
+                               title="'No bus events yet'"
+                               message="'Create or edit a risk to publish RiskCreated / UwFieldsUpdated.'"></apex-empty-state>
+            <div class="obx-msg" ng-repeat="m in vm.messages">
+                <div class="obx-msg__top">
+                    <strong>{{m.eventType}}</strong>
+                    <span class="apex-mono">{{m.uwReference}}</span>
+                </div>
+                <div class="apex-text-muted">{{m.occurredUtc | date:'dd MMM HH:mm:ss'}} · {{m.source}}</div>
+            </div>
+        </div>
+        <div class="apex-card">
+            <div class="apex-card__header"><h3>Publish insured (external)</h3></div>
+            <p class="apex-text-muted">Simulates Open Box / CRM sending <code>InsuredCreated</code> on routing key <code>party.insured</code>.</p>
+            <div class="apex-alert apex-alert--success" ng-if="vm.partySuccess">{{vm.partySuccess}}</div>
+            <div class="apex-alert apex-alert--danger" ng-if="vm.partyError">{{vm.partyError}}</div>
+            <form ng-submit="vm.publishInsured()">
+                <div class="apex-form-row">
+                    <label>Name</label>
+                    <input type="text" ng-model="vm.party.name" required placeholder="Northbridge Logistics Ltd">
+                </div>
+                <div class="apex-form-row">
+                    <label>External id</label>
+                    <input type="text" ng-model="vm.party.externalId" placeholder="OBX-INS-… (auto if blank)">
+                </div>
+                <div class="apex-form-row">
+                    <label>Registration no.</label>
+                    <input type="text" ng-model="vm.party.registrationNumber">
+                </div>
+                <div class="apex-form-row">
+                    <label>City / postcode</label>
+                    <div class="apex-form-row--split">
+                        <input type="text" ng-model="vm.party.city" placeholder="City">
+                        <input type="text" ng-model="vm.party.postCode" placeholder="Postcode">
+                    </div>
+                </div>
+                <div class="apex-form-row">
+                    <label>Trade code</label>
+                    <input type="text" ng-model="vm.party.tradeCode" placeholder="e.g. OFFICE, RETAIL">
+                </div>
+                <button type="submit" class="apex-btn apex-btn--primary apex-btn--sm" ng-disabled="vm.partyBusy">
+                    {{vm.partyBusy ? 'Publishing…' : 'Publish to bus'}}
+                </button>
+            </form>
+        </div>
+        <div class="apex-card">
+            <div class="apex-card__header"><h3>Enable RabbitMQ</h3></div>
+            <ol class="obx-howto">
+                <li>Local broker on <code>127.0.0.1:5672</code></li>
+                <li>Set <code>Apex:RabbitMQ:Enabled</code> to <code>true</code></li>
+                <li>Restart API — Support health shows RabbitMQ Success</li>
+                <li>Party queue: <code>apex.workbench.insured</code></li>
+            </ol>
+            <p class="apex-text-muted">Management UI: <a href="http://127.0.0.1:15672" target="_blank" rel="noopener">127.0.0.1:15672</a> (guest/guest)</p>
+        </div>
+    </aside>
+</div>

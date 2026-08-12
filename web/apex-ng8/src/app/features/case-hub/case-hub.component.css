@@ -1,0 +1,380 @@
+:host { display: block; }
+
+.uw-layout {
+  display: flex;
+  gap: 0;
+  min-height: calc(100vh - 140px);
+  border: 1px solid #c8c8c8;
+  background: #fff;
+  overflow: hidden;
+}
+
+.uw-rail {
+  width: 168px;
+  flex: 0 0 168px;
+  background: #f4f4f4;
+  border-right: 1px solid #c8c8c8;
+  display: flex;
+  flex-direction: column;
+  padding: 8px 0;
+  overflow-y: auto;
+  max-height: calc(100vh - 140px);
+}
+
+.uw-rail button {
+  border: 0;
+  background: transparent;
+  text-align: left;
+  padding: 10px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  color: #333;
+}
+
+.uw-rail button.active {
+  background: #C62828;
+  color: #fff;
+  font-weight: 700;
+  position: relative;
+}
+
+.uw-rail button.active::after {
+  content: '';
+  position: absolute;
+  right: -8px;
+  top: 50%;
+  margin-top: -8px;
+  border: 8px solid transparent;
+  border-left-color: #C62828;
+}
+
+.uw-main {
+  flex: 1;
+  min-width: 0;
+  padding: 0 0 16px;
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: calc(100vh - 140px);
+}
+
+.uw-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 12px;
+  border-bottom: 1px solid #ddd;
+}
+
+.uw-header__identity {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.uw-account {
+  font-size: 15px;
+}
+
+.uw-meta {
+  display: block;
+  width: 100%;
+  font-size: 12px;
+  color: #666;
+  margin-top: 2px;
+}
+
+.uw-toolbar { display: flex; flex-wrap: wrap; gap: 4px; justify-content: flex-end; }
+
+.uw-subhead {
+  margin: 8px 0 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #444;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.uw-subhead:first-child { margin-top: 0; }
+
+.uw-empty-row {
+  text-align: center;
+  color: #888;
+  font-style: italic;
+  padding: 12px 6px !important;
+}
+
+.apex-card--flat {
+  border-radius: 0;
+  box-shadow: none;
+  border-left: 0;
+  border-right: 0;
+  margin: 0;
+}
+
+.apex-kv--dense {
+  display: grid;
+  grid-template-columns: 140px 1fr 140px 1fr;
+  gap: 4px 12px;
+  font-size: 12px;
+}
+
+.apex-kv--dense dt { color: #666; font-weight: 600; }
+.apex-kv--dense dd { margin: 0; }
+
+.apex-row--selected td { background: #FFF3F3; }
+
+.apex-panel-red {
+  background: #C62828;
+  color: #fff;
+  padding: 8px 12px;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.apex-table--dense th,
+.apex-table--dense td {
+  padding: 4px 6px;
+  font-size: 11.5px;
+}
+
+.apex-mb-16 { margin-bottom: 16px; }
+.apex-mt-16 { margin-top: 16px; }
+
+.apex-form-row--full {
+  grid-column: 1 / -1;
+}
+
+.uw-check-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  margin-top: 22px;
+}
+
+.uw-modal-backdrop {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 1000;
+}
+
+.uw-section-layout {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.uw-section-layout .apex-kv--dense {
+  flex: 1 1 420px;
+  min-width: 0;
+}
+
+.uw-kpi-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px 12px;
+}
+
+.uw-section-layout > .uw-kpi-strip {
+  flex: 0 1 280px;
+}
+
+.uw-kpi-strip__item {
+  border: 1px solid #c8c8c8;
+  background: #fafafa;
+  padding: 6px 10px;
+  min-width: 88px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.uw-kpi-strip__item--total {
+  background: #FFF3F3;
+  border-color: #C62828;
+  font-weight: 700;
+}
+
+.uw-kpi-strip__label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #666;
+}
+
+.uw-kpi-strip__value {
+  font-size: 13px;
+  color: #222;
+}
+
+.uw-perf-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 12px;
+  font-size: 12px;
+}
+
+.uw-perf-filters select {
+  margin-left: 6px;
+}
+
+.uw-roe-note {
+  color: #666;
+  font-style: italic;
+}
+
+.uw-docs-layout {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 0 12px 12px;
+}
+
+.uw-docs-folders {
+  flex: 1 1 280px;
+  min-width: 0;
+}
+
+.uw-docs-folder {
+  margin-bottom: 12px;
+  border: 1px solid #ddd;
+}
+
+.uw-docs-folder__title {
+  background: #f4f4f4;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  border-bottom: 1px solid #ddd;
+}
+
+.uw-docs-folder__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.uw-docs-folder__list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 8px;
+  border-bottom: 1px solid #eee;
+  font-size: 12px;
+}
+
+.uw-docs-folder__item--active {
+  background: #FFF3F3;
+}
+
+.uw-docs-file {
+  border: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  color: #1565C0;
+  padding: 2px 0;
+  font-size: 12px;
+}
+
+.uw-docs-preview {
+  flex: 1 1 360px;
+  min-width: 0;
+  border: 1px solid #ddd;
+  padding: 8px;
+}
+
+.uw-docs-preview__header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: baseline;
+  margin-bottom: 8px;
+  font-size: 12px;
+}
+
+.uw-docs-preview__frame {
+  width: 100%;
+  height: 420px;
+  border: 1px solid #ccc;
+  background: #f9f9f9;
+}
+
+.uw-esg-help {
+  background: #FFF8E1;
+  border: 1px solid #F9A825;
+  padding: 10px 12px;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.uw-modal {
+  position: fixed;
+  z-index: 1001;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(900px, calc(100vw - 32px));
+  max-height: calc(100vh - 48px);
+  overflow: auto;
+  background: #fff;
+  border: 1px solid #c8c8c8;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  padding: 16px;
+}
+
+.uw-modal__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.uw-modal__header h2 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.uw-modal__hint {
+  margin: 0 0 12px;
+  font-size: 12px;
+  color: #666;
+}
+
+.uw-modal__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid #eee;
+}
+
+@media (max-width: 900px) {
+  .uw-layout { flex-direction: column; }
+  .uw-rail {
+    width: 100%;
+    flex: none;
+    flex-direction: row;
+    flex-wrap: wrap;
+    border-right: 0;
+    border-bottom: 1px solid #c8c8c8;
+  }
+  .uw-rail button.active::after { display: none; }
+  .apex-kv--dense {
+    grid-template-columns: 120px 1fr;
+  }
+}

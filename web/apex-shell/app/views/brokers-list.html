@@ -1,0 +1,106 @@
+<div class="apex-page-header">
+    <div class="apex-page-header__title">
+        <h1>Brokers</h1>
+        <div class="apex-page-header__subtitle">Broker panel — agreements, production targets, and activity.</div>
+    </div>
+    <div class="apex-page-header__actions" ng-if="vm.canEdit()">
+        <button type="button" class="apex-btn apex-btn--primary" ng-click="vm.toggleCreate()">
+            {{vm.showCreate ? 'Cancel' : '+ New broker'}}
+        </button>
+    </div>
+</div>
+
+<div class="apex-card" ng-if="vm.showCreate">
+    <div class="apex-card__header"><h3>Onboard broker</h3></div>
+    <div class="apex-alert apex-alert--danger" ng-if="vm.createError">{{vm.createError}}</div>
+    <form ng-submit="vm.createBroker()">
+        <div class="apex-form-grid">
+            <div class="apex-form-row">
+                <label>Name</label>
+                <input type="text" ng-model="vm.draft.name" required>
+            </div>
+            <div class="apex-form-row">
+                <label>Broker code</label>
+                <input type="text" ng-model="vm.draft.brokerCode" required placeholder="e.g. NB04">
+            </div>
+            <div class="apex-form-row">
+                <label>Contact email</label>
+                <input type="email" ng-model="vm.draft.contactEmail">
+            </div>
+            <div class="apex-form-row">
+                <label>Contact phone</label>
+                <input type="text" ng-model="vm.draft.contactPhone">
+            </div>
+            <div class="apex-form-row">
+                <label>Agreement ref</label>
+                <input type="text" ng-model="vm.draft.agreementRef">
+            </div>
+            <div class="apex-form-row">
+                <label>Production target (£)</label>
+                <input type="number" ng-model="vm.draft.productionTarget" min="0">
+            </div>
+        </div>
+        <div class="apex-form-row">
+            <label>Address</label>
+            <input type="text" ng-model="vm.draft.address">
+        </div>
+        <div class="apex-btn-row">
+            <button type="submit" class="apex-btn apex-btn--primary" ng-disabled="vm.createBusy">
+                {{vm.createBusy ? 'Saving…' : 'Create broker'}}
+            </button>
+        </div>
+    </form>
+</div>
+
+<div class="apex-card">
+    <form class="apex-filter-bar" ng-submit="vm.applyFilters()">
+        <div class="apex-form-row">
+            <label>Search</label>
+            <input type="search" ng-model="vm.filters.search" placeholder="Broker name or code…">
+        </div>
+        <div class="apex-form-row">
+            <label class="apex-checkbox-row">
+                <input type="checkbox" ng-model="vm.filters.isActive" ng-true-value="true" ng-false-value=""> Active only
+            </label>
+        </div>
+        <div class="apex-form-row">
+            <button type="submit" class="apex-btn">Apply</button>
+        </div>
+    </form>
+
+    <div class="apex-loading" ng-if="vm.loading">
+        <span class="apex-spinner"></span> Loading brokers…
+    </div>
+
+    <div class="apex-alert apex-alert--danger" ng-if="vm.error && !vm.loading">{{vm.error}}</div>
+
+    <apex-empty-state ng-if="!vm.loading && !vm.error && vm.brokers.length === 0"
+                       title="'No brokers found'"
+                       message="'Try clearing your search.'"></apex-empty-state>
+
+    <div class="apex-table-wrap" ng-if="!vm.loading && vm.brokers.length > 0">
+        <table class="apex-table">
+            <thead>
+            <tr>
+                <th>Code</th>
+                <th>Name</th>
+                <th>Agreement Ref</th>
+                <th>Production Target</th>
+                <th>Status</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr class="clickable" ng-repeat="b in vm.brokers">
+                <td class="apex-mono">{{b.brokerCode}}</td>
+                <td><a class="apex-table__link" ng-href="#!/brokers/{{b.id}}">{{b.name}}</a></td>
+                <td>{{b.agreementRef}}</td>
+                <td>{{b.productionTarget | currency:'£':0}}</td>
+                <td>
+                    <span class="apex-badge apex-badge--success" ng-if="b.isActive">Active</span>
+                    <span class="apex-badge apex-badge--neutral" ng-if="!b.isActive">Inactive</span>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

@@ -1,0 +1,130 @@
+<div class="apex-page-header">
+    <div class="apex-page-header__title">
+        <h1>Task View</h1>
+        <div class="apex-page-header__subtitle" ng-if="vm.task">
+            {{vm.task.taskType || 'Task'}} · {{vm.task.reference || ('TASK-' + vm.task.id)}}
+        </div>
+    </div>
+    <div class="apex-page-header__actions">
+        <button type="button" class="apex-btn apex-btn--ghost apex-btn--sm" ng-click="vm.back()">← Back to Tasks</button>
+        <a class="apex-btn apex-btn--sm" ng-if="vm.caseHubUrl()" ng-href="{{vm.caseHubUrl()}}">Open UW File</a>
+    </div>
+</div>
+
+<div class="apex-loading" ng-if="vm.loading"><span class="apex-spinner"></span> Loading task…</div>
+<div class="apex-alert apex-alert--danger" ng-if="vm.error && !vm.loading">{{vm.error}}</div>
+
+<div class="apex-grid-2" ng-if="vm.task && !vm.loading">
+    <div>
+        <div class="apex-card">
+            <div class="apex-card__header">
+                <h3>{{vm.task.title}}</h3>
+                <span class="apex-badge" ng-class="{'apex-badge--warn': vm.task.isOverdue, 'apex-badge--success': vm.task.status === 'Completed'}">{{vm.task.status}}</span>
+            </div>
+            <dl class="apex-kv">
+                <dt>Account</dt><dd>{{vm.task.accountName || '—'}}</dd>
+                <dt>UW Reference</dt><dd class="apex-mono">{{vm.task.uwReference || '—'}}</dd>
+                <dt>Principal UW</dt><dd>{{vm.task.principalUw || '—'}}</dd>
+                <dt>Task Ref</dt><dd class="apex-mono">{{vm.task.reference || ('TASK-' + vm.task.id)}}</dd>
+                <dt>Lloyd's PIN</dt><dd>{{vm.task.lloydsPin || '—'}}</dd>
+                <dt>Document</dt><dd>{{vm.task.documentFileName || '—'}}</dd>
+            </dl>
+
+            <div class="apex-form-grid apex-mt-16">
+                <div class="apex-form-row">
+                    <label>Send To (User Id)</label>
+                    <input type="number" ng-model="vm.task.assignedToUserId">
+                    <div class="apex-text-muted">{{vm.task.assignedToName}}</div>
+                </div>
+                <div class="apex-form-row">
+                    <label>Priority</label>
+                    <select ng-model="vm.task.priority">
+                        <option>Low</option>
+                        <option>Normal</option>
+                        <option>High</option>
+                    </select>
+                </div>
+                <div class="apex-form-row">
+                    <label>Due</label>
+                    <input type="date" ng-model="vm.task.dueDate" ng-model-options="{timezone:'UTC'}"
+                           ng-value="(vm.task.dueDate | date:'yyyy-MM-dd')">
+                </div>
+                <div class="apex-form-row">
+                    <label>Status</label>
+                    <select ng-model="vm.task.status">
+                        <option value="Pending">Pending</option>
+                        <option value="InProgress">In Progress</option>
+                        <option value="Completed">Completed</option>
+                        <option value="Cancelled">Cancelled</option>
+                        <option value="Overdue">Overdue</option>
+                    </select>
+                </div>
+            </div>
+            <div class="apex-form-row">
+                <label>Description</label>
+                <textarea rows="4" ng-model="vm.task.description"></textarea>
+            </div>
+
+            <div class="apex-card apex-card--flat" ng-if="vm.isLineSlip()" style="margin-top:12px;padding:12px;border:1px solid #ddd">
+                <h3 class="uw-subhead" style="margin-top:0">Line Slip questionnaire</h3>
+                <div class="apex-form-grid">
+                    <div class="apex-form-row">
+                        <label>Customer Type</label>
+                        <select ng-model="vm.lineSlip.customerType">
+                            <option>Corporate</option>
+                            <option>SME</option>
+                            <option>Personal</option>
+                        </select>
+                    </div>
+                    <div class="apex-form-row apex-form-row--check">
+                        <label><input type="checkbox" ng-model="vm.lineSlip.bulking"> Bulking</label>
+                    </div>
+                    <div class="apex-form-row apex-form-row--check">
+                        <label><input type="checkbox" ng-model="vm.lineSlip.apex100"> 100% Apex</label>
+                    </div>
+                    <div class="apex-form-row" ng-if="vm.lineSlip.bulking || !vm.lineSlip.apex100">
+                        <label>Follow-on detail</label>
+                        <input type="text" ng-model="vm.lineSlip.followOn" placeholder="Follow-on wording / market share…">
+                    </div>
+                </div>
+            </div>
+
+            <div class="apex-btn-row apex-mt-16">
+                <button type="button" class="apex-btn apex-btn--primary" ng-disabled="vm.busy" ng-click="vm.save()">Save</button>
+                <button type="button" class="apex-btn apex-btn--danger" ng-disabled="vm.busy" ng-click="vm.complete()">Complete &amp; Close</button>
+                <button type="button" class="apex-btn apex-btn--ghost" ng-disabled="vm.busy" ng-click="vm.cancel()">Cancel task</button>
+            </div>
+        </div>
+
+        <div class="apex-card">
+            <div class="apex-card__header"><h3>Comment history</h3></div>
+            <div class="apex-note-row" ng-repeat="c in vm.task.comments">
+                <div class="apex-note-row__meta">{{c.authorName || ('User ' + c.authorUserId)}} · {{c.createdUtc | date:'dd MMM yyyy HH:mm'}}</div>
+                <div>{{c.body}}</div>
+            </div>
+            <apex-empty-state ng-if="!vm.task.comments || !vm.task.comments.length"
+                               title="'No comments'" message="'Add a comment to collaborate with ops.'"></apex-empty-state>
+            <div class="apex-form-row apex-mt-16">
+                <label>New comment</label>
+                <textarea rows="2" ng-model="vm.commentText"></textarea>
+            </div>
+            <button type="button" class="apex-btn apex-btn--sm" ng-disabled="vm.busy || !vm.commentText" ng-click="vm.addComment()">Add comment</button>
+        </div>
+    </div>
+
+    <div>
+        <div class="apex-card">
+            <div class="apex-card__header"><h3>Associated document</h3></div>
+            <p ng-if="!vm.task.documentId" class="apex-text-muted">No document linked to this task.</p>
+            <div ng-if="vm.task.documentId">
+                <p><strong>{{vm.task.documentFileName || ('Document #' + vm.task.documentId)}}</strong></p>
+                <iframe ng-if="vm.previewUrl" ng-src="{{vm.previewUrl}}"
+                        style="width:100%;height:420px;border:1px solid #ccc;background:#fafafa"
+                        title="Document preview"></iframe>
+                <a class="apex-btn apex-btn--sm apex-btn--ghost apex-mt-16"
+                   ng-if="vm.task.documentId"
+                   ng-href="{{vm.previewUrl}}" target="_blank" rel="noopener">Download / open</a>
+            </div>
+        </div>
+    </div>
+</div>
