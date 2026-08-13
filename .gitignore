@@ -42,3 +42,7 @@ Thumbs.db
 appsettings.*.local.json
 .env
 .env.*
+
+.claude/
+scripts/
+commands.md
