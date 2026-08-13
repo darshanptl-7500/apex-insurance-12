@@ -1,0 +1,111 @@
+{
+  "frontend": {
+    "framework": "angular",
+    "version": "8.2.14",
+    "ui_library": [],
+    "state_management": [],
+    "notes": "Hybrid host: legacy AngularJS shell (web/apex-shell) + Angular 8.2.14 islands (web/apex-ng8), served by a custom Node host (web/serve-hybrid.js)"
+  },
+  "backend": {
+    "language": "csharp",
+    "framework": "aspnet",
+    "language_version": "10.0",
+    "api_style": ["rest"],
+    "sdk": "Microsoft.NET.Sdk.Web",
+    "messaging": ["rabbitmq"]
+  },
+  "database": {
+    "primary": "sqlserver",
+    "primary_version": null,
+    "orm": "efcore",
+    "orm_version": "10.0.0",
+    "cache": []
+  },
+  "testing": {
+    "frameworks": [
+      "xunit",
+      "playwright"
+    ],
+    "unit": [
+      "xunit"
+    ],
+    "e2e": [
+      "playwright"
+    ]
+  },
+  "infrastructure": {
+    "cloud": null,
+    "cicd": [],
+    "containers": ["rabbitmq (docker-compose.rabbitmq.yml)"]
+  },
+  "detected_at": "2026-08-13T07:03:34.857Z",
+  "profile": "default",
+  "installed_components": {
+    "rules": [
+      "common"
+    ],
+    "skills": [
+      "coding-standards",
+      "security-review",
+      "tdd-workflow",
+      "strategic-compact",
+      "search-first",
+      "verification-loop",
+      "spec-driven-dev",
+      "codebase-learning",
+      "cross-platform-commands",
+      "adr-management",
+      "invariant-checks",
+      "understand",
+      "understand-chat",
+      "understand-diff",
+      "understand-explain",
+      "understand-onboard",
+      "understand-domain",
+      "understand-dashboard",
+      "understand-knowledge",
+      "ai-governance",
+      "client-onboarding",
+      "review-gates",
+      "pod-maturity",
+      "architecture-copilot",
+      "frontend-patterns",
+      "e2e-testing",
+      "dotnet-patterns",
+      "dotnet-security",
+      "dotnet-tdd",
+      "dotnet-verification",
+      "backend-patterns",
+      "api-design",
+      "database-migrations"
+    ],
+    "agents": [
+      "planner",
+      "architect",
+      "tdd-guide",
+      "code-reviewer",
+      "security-reviewer",
+      "build-error-resolver",
+      "doc-updater",
+      "spec-writer",
+      "knowledge-curator",
+      "workflow-orchestrator",
+      "adr-writer",
+      "invariant-catalog",
+      "client-onboarder",
+      "e2e-runner",
+      "refactor-cleaner",
+      "csharp-reviewer",
+      "database-reviewer"
+    ],
+    "hooks": [
+      "session-start",
+      "session-end",
+      "audit-trail",
+      "secret-scanner",
+      "codebase-context",
+      "knowledge-sync",
+      "invariant-check"
+    ]
+  }
+}
